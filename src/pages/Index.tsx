@@ -8,7 +8,7 @@ const Index = () => {
     <Layout>
       <SchoolHero />
       <ProgramsSection />
-      <TestimonialsSection/>
+      <TestimonialsSection />
     </Layout>
   );
 };
