@@ -14,9 +14,6 @@ import sodImage09 from "@/assets/sod/3P0D4904.JPG";
 import sodImage10 from "@/assets/sod/3P0D4905.JPG";
 import sodImage11 from "@/assets/sod/3P0D4906.JPG";
 import sodImage12 from "@/assets/sod/3P0D4907.JPG";
-import sodImage13 from "@/assets/sod/3P0D4908.JPG";
-import sodImage14 from "@/assets/sod/3P0D4909.JPG";
-import sodImage15 from "@/assets/sod/sod1.JPG";
 
 export default function SoftwareDevelopment() {
   const galleryImages = [
@@ -32,9 +29,6 @@ export default function SoftwareDevelopment() {
     sodImage10,
     sodImage11,
     sodImage12,
-    sodImage13,
-    sodImage14,
-    sodImage15,
   ];
 
   return (
@@ -44,7 +38,7 @@ export default function SoftwareDevelopment() {
           <div className="absolute top-20 left-10 w-72 h-72 bg-school-primary rounded-full blur-3xl animate-float"></div>
           <div className="absolute bottom-20 right-10 w-96 h-96 bg-school-accent rounded-full blur-3xl animate-float delay-300"></div>
         </div>
-        
+
         <div className="container mx-auto max-w-6xl relative z-10">
           <div className="text-center mb-12 animate-fadeInDown">
             <Code className="w-16 h-16 mx-auto mb-4 text-school-primary dark:text-school-accent animate-float" />
@@ -60,8 +54,8 @@ export default function SoftwareDevelopment() {
             <div className="bg-card p-8 rounded-lg shadow-lg hover-lift animate-fadeInLeft">
               <h2 className="text-2xl font-bold mb-4 text-school-primary dark:text-school-accent">Program Overview</h2>
               <p className="text-muted-foreground leading-relaxed mb-4">
-                Our Software Development program equips students with cutting-edge programming skills 
-                and software engineering principles. Students learn to design, develop, and maintain 
+                Our Software Development program equips students with cutting-edge programming skills
+                and software engineering principles. Students learn to design, develop, and maintain
                 software applications using modern technologies and best practices.
               </p>
               <p className="text-muted-foreground leading-relaxed">
@@ -98,9 +92,9 @@ export default function SoftwareDevelopment() {
 
           <div className="mb-12 animate-fadeInUp delay-300">
             <div className="relative h-96 rounded-lg overflow-hidden shadow-2xl">
-              <img 
-                src={SoftwareDev} 
-                alt="Software Development" 
+              <img
+                src={SoftwareDev}
+                alt="Software Development"
                 className="w-full h-full object-cover hover:scale-110 transition-transform duration-700"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-school-primary/80 to-transparent"></div>
@@ -133,7 +127,7 @@ export default function SoftwareDevelopment() {
             <h2 className="text-3xl font-bold text-center mb-8">
               <span className="gradient-text">Program Gallery</span>
             </h2>
-            <ImageGallery 
+            <ImageGallery
               images={galleryImages}
               altPrefix="Software Development"
             />
