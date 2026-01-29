@@ -63,7 +63,7 @@ export default function Blog() {
                     setError(null);
                   })
                   .catch((err: any) => {
-                    setError(err.message || "Failed to load blog posts");
+                    setError(err instanceof Error ? err.message : "Failed to load blog posts");
                   })
                   .finally(() => setLoading(false));
               }}

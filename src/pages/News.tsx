@@ -47,7 +47,7 @@ export default function News() {
       }
     } catch (err) {
       console.error("Error fetching news:", err);
-      setError("Unable to connect to server");
+      setError(err instanceof Error ? err.message : "Unable to connect to server");
     } finally {
       setLoading(false);
     }
