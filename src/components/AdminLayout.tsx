@@ -16,6 +16,7 @@ import {
   MessageSquare,
   ListChecks,
   PenSquare,
+  Shield,
 } from "lucide-react";
 
 interface AdminLayoutProps {
@@ -80,6 +81,12 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       description: "Manage blog posts",
     },
     {
+      name: "Users",
+      path: "/admin/users",
+      icon: Shield,
+      description: "Manage admin accounts",
+    },
+    {
       name: "Settings",
       path: "/admin/settings",
       icon: Settings,
@@ -137,8 +144,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                 key={item.path}
                 to={item.path}
                 className={`flex items-start gap-3 p-3 rounded-lg transition-all duration-200 ${active
-                    ? "bg-school-primary text-white dark:bg-school-accent"
-                    : "hover:bg-muted"
+                  ? "bg-school-primary text-white dark:bg-school-accent"
+                  : "hover:bg-muted"
                   }`}
               >
                 <Icon className={`w-5 h-5 mt-0.5 flex-shrink-0 ${active ? "text-white" : ""}`} />

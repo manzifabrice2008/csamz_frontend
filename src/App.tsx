@@ -28,6 +28,7 @@ const AdminApplications = lazy(() => import("./pages/AdminApplications"));
 const AdminOverview = lazy(() => import("./pages/AdminOverview"));
 const AdminSettings = lazy(() => import("./pages/AdminSettings"));
 const AdminStudents = lazy(() => import("./pages/AdminStudents"));
+const AdminUsers = lazy(() => import("./pages/AdminUsers"));
 const ProtectedRoute = lazy(() => import("./components/ProtectedRoute"));
 const SubmitTestimonial = lazy(() => import("./pages/SubmitTestimonial"));
 const AdminTestimonials = lazy(() => import("./pages/AdminTestimonials"));
@@ -251,6 +252,7 @@ const App = () => {
               <Route path="/admin/testimonials" element={<ProtectedRoute><AdminTestimonials /></ProtectedRoute>} />
               <Route path="/admin/teachers" element={<ProtectedRoute><AdminTeachers /></ProtectedRoute>} />
               <Route path="/admin/students" element={<ProtectedRoute><AdminStudents /></ProtectedRoute>} />
+              <Route path="/admin/users" element={<ProtectedRoute><AdminUsers /></ProtectedRoute>} />
               <Route path="/admin/settings" element={<ProtectedRoute><AdminSettings /></ProtectedRoute>} />
               <Route path="/admin/blog" element={<ProtectedRoute><AdminBlog /></ProtectedRoute>} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

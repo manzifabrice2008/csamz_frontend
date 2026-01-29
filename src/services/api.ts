@@ -1440,6 +1440,33 @@ export const studentAdminApi = {
   }
 };
 
+export interface AdminUser {
+  id: number;
+  username: string;
+  email: string;
+  full_name: string;
+  role: 'admin' | 'super_admin';
+  status?: 'active' | 'inactive';
+  created_at?: string;
+}
+
+export const adminUserApi = {
+  list: async () => {
+    return apiRequest<{ success: boolean; admins: AdminUser[] }>('/admin/users');
+  },
+  updateStatus: async (id: number, status: 'active' | 'inactive') => {
+    return apiRequest<{ success: boolean; message: string; admin: AdminUser }>(`/admin/users/${id}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status })
+    });
+  },
+  delete: async (id: number) => {
+    return apiRequest<{ success: boolean; message: string }>(`/admin/users/${id}`, {
+      method: 'DELETE'
+    });
+  }
+};
+
 export const analyticsApi = {
   track: async (path: string) => {
     return apiRequest<{ success: boolean }>('/analytics/track', {
