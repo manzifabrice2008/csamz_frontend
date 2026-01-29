@@ -62,6 +62,12 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       description: "Approve or reject teacher accounts",
     },
     {
+      name: "Students",
+      path: "/admin/students",
+      icon: Users,
+      description: "Manage registered student accounts",
+    },
+    {
       name: "News & Updates",
       path: "/admin/dashboard",
       icon: Newspaper,
@@ -119,9 +125,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-16 left-0 bottom-0 w-64 bg-card border-r border-border transition-transform duration-300 z-40 ${
-          sidebarOpen ? "translate-x-0" : "-translate-x-full"
-        } lg:translate-x-0`}
+        className={`fixed top-16 left-0 bottom-0 w-64 bg-card border-r border-border transition-transform duration-300 z-40 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"
+          } lg:translate-x-0`}
       >
         <nav className="p-4 space-y-2">
           {navItems.map((item) => {
@@ -131,11 +136,10 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               <Link
                 key={item.path}
                 to={item.path}
-                className={`flex items-start gap-3 p-3 rounded-lg transition-all duration-200 ${
-                  active
+                className={`flex items-start gap-3 p-3 rounded-lg transition-all duration-200 ${active
                     ? "bg-school-primary text-white dark:bg-school-accent"
                     : "hover:bg-muted"
-                }`}
+                  }`}
               >
                 <Icon className={`w-5 h-5 mt-0.5 flex-shrink-0 ${active ? "text-white" : ""}`} />
                 <div className="flex-1 min-w-0">
@@ -143,9 +147,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                     {item.name}
                   </div>
                   <div
-                    className={`text-xs mt-0.5 ${
-                      active ? "text-white/80" : "text-muted-foreground"
-                    }`}
+                    className={`text-xs mt-0.5 ${active ? "text-white/80" : "text-muted-foreground"
+                      }`}
                   >
                     {item.description}
                   </div>
@@ -168,9 +171,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
       {/* Main Content */}
       <main
-        className={`pt-16 transition-all duration-300 ${
-          sidebarOpen ? "lg:pl-64" : ""
-        }`}
+        className={`pt-16 transition-all duration-300 ${sidebarOpen ? "lg:pl-64" : ""
+          }`}
       >
         <div className="min-h-[calc(100vh-4rem)]">{children}</div>
       </main>

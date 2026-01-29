@@ -122,10 +122,7 @@ export default function StudentExamResult() {
             </CardHeader>
             <CardContent className="flex flex-col gap-3 sm:flex-row sm:justify-center">
               <Button asChild variant="default">
-                <Link to="/student/exams">Back to exams</Link>
-              </Button>
-              <Button asChild variant="outline">
-                <Link to={`/student/exams/${examId}`}>Retake exam</Link>
+                <Link to="/student/exams">Back to exams Catalog</Link>
               </Button>
             </CardContent>
           </Card>
@@ -148,12 +145,6 @@ export default function StudentExamResult() {
               <Link to="/student/dashboard">
                 <ArrowLeft className="w-4 h-4" />
                 Back to dashboard
-              </Link>
-            </Button>
-            <Button asChild className="flex items-center gap-2">
-              <Link to={`/student/exams/${examId}`}>
-                <RotateCcw className="w-4 h-4" />
-                Try again
               </Link>
             </Button>
           </div>

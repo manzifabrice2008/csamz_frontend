@@ -69,7 +69,14 @@ export default function StudentExams() {
                   {exams.map((exam) => (
                     <Card key={exam.id} className="border shadow-sm flex flex-col">
                       <CardHeader className="space-y-2">
-                        <CardTitle className="text-xl">{exam.title}</CardTitle>
+                        <CardTitle className="text-xl flex items-center justify-between">
+                          {exam.title}
+                          {exam.already_taken && (
+                            <Badge variant="secondary" className="bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400">
+                              Completed
+                            </Badge>
+                          )}
+                        </CardTitle>
                         {exam.description && (
                           <CardDescription className="text-sm">{exam.description}</CardDescription>
                         )}
@@ -87,9 +94,15 @@ export default function StudentExams() {
                             <span>{exam.total_marks || 0}</span>
                           </div>
                         </div>
-                        <Button asChild className="w-full">
-                          <Link to={`/student/exams/${exam.id}`}>Start Exam</Link>
-                        </Button>
+                        {exam.already_taken ? (
+                          <Button asChild variant="outline" className="w-full">
+                            <Link to={`/student/exams/${exam.id}/result`}>View Result</Link>
+                          </Button>
+                        ) : (
+                          <Button asChild className="w-full">
+                            <Link to={`/student/exams/${exam.id}`}>Start Exam</Link>
+                          </Button>
+                        )}
                       </CardContent>
                     </Card>
                   ))}

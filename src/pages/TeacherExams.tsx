@@ -55,6 +55,7 @@ export default function TeacherExams() {
     options: ["", "", "", ""] as string[],
     correct_answer: "",
     marks: 1,
+    time_limit: 30,
   });
 
   // Fetch Teacher and Exams on mount
@@ -233,6 +234,7 @@ export default function TeacherExams() {
       options: ["", "", "", ""],
       correct_answer: "",
       marks: 1,
+      time_limit: 30,
     });
   };
 
@@ -245,6 +247,7 @@ export default function TeacherExams() {
       options: question.type === "MCQ" ? [...question.options] : ["", "", "", ""],
       correct_answer: question.correct_answer,
       marks: question.marks,
+      time_limit: question.time_limit || 30,
     });
   };
 
@@ -292,6 +295,7 @@ export default function TeacherExams() {
         options: questionForm.type === "MCQ" ? questionForm.options.filter(o => o) : undefined,
         correct_answer: questionForm.correct_answer,
         marks: questionForm.marks,
+        time_limit: questionForm.time_limit,
       };
 
       let resultQuestion: ExamQuestionManage;
@@ -636,6 +640,17 @@ export default function TeacherExams() {
                           }
                         />
                       </div>
+                      <div>
+                        <label className="text-sm font-medium block mb-1">Time Limit (sec)</label>
+                        <Input
+                          type="number"
+                          min={5}
+                          value={questionForm.time_limit}
+                          onChange={(event) =>
+                            setQuestionForm((prev) => ({ ...prev, time_limit: Number(event.target.value) }))
+                          }
+                        />
+                      </div>
                     </div>
                     {questionForm.type === "MCQ" ? (
                       <div className="space-y-2">
@@ -711,7 +726,7 @@ export default function TeacherExams() {
                             <div>
                               <p className="font-semibold">{question.question_text}</p>
                               <p className="text-xs text-muted-foreground">
-                                {question.type === "MCQ" ? "Multiple choice" : "True / False"} • {question.marks} marks
+                                {question.type === "MCQ" ? "Multiple choice" : "True / False"} • {question.marks} marks • {question.time_limit || 30}s
                               </p>
                             </div>
                             <div className="flex gap-2">

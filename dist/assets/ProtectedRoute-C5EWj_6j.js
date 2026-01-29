@@ -1,0 +1,1 @@
+import{a,r as n,j as e}from"./index-CsgYaV5H.js";function c({children:o}){const t=a();return n.useEffect(()=>{localStorage.getItem("authToken")||t("/admin/login")},[t]),localStorage.getItem("authToken")?e.jsx(e.Fragment,{children:o}):null}export{c as default};

@@ -971,6 +971,7 @@ export interface ExamSummary {
   created_at?: string;
   exam_code?: string | null;
   teacher_name?: string | null;
+  already_taken?: boolean;
 }
 
 export interface ExamQuestion {
@@ -979,6 +980,7 @@ export interface ExamQuestion {
   type: 'MCQ' | 'TF';
   options: string[];
   marks: number;
+  time_limit: number;
 }
 
 export interface ExamDetail {
@@ -994,6 +996,7 @@ export interface ExamDetail {
   created_at?: string;
   updated_at?: string;
   question_count?: number;
+  already_taken?: boolean;
 }
 
 export interface SubmitExamPayload {
@@ -1058,6 +1061,13 @@ export interface TeacherExamResultsResponse {
   success: boolean;
   exam_title: string;
   results: TeacherExamResult[];
+  stats?: {
+    total_submissions: number;
+    pass_count: number;
+    fail_count: number;
+    winning_rate: number;
+    average_score: number;
+  };
 }
 
 export interface StudentHistoryResult {
@@ -1180,6 +1190,9 @@ export const teacherExamApi = {
     return teacherApiRequest(`/exams/questions/${questionId}`, {
       method: "DELETE",
     });
+  },
+  getExamResults: async (examId: number): Promise<TeacherExamResultsResponse> => {
+    return teacherApiRequest<TeacherExamResultsResponse>(`/exams/${examId}/results`);
   },
 };
 
@@ -1409,3 +1422,43 @@ export const teacherAttendanceApi = {
     return teacherApiRequest<{ success: boolean; attendance: AttendanceRecord[] }>(`/teacher/attendance/history${qs}`);
   }
 };
+
+export const studentAdminApi = {
+  list: async () => {
+    return apiRequest<{ success: boolean; students: StudentUser[] }>('/admin/students');
+  },
+  updateStatus: async (id: number, status: 'active' | 'inactive') => {
+    return apiRequest<{ success: boolean; message: string; student: StudentUser }>(`/admin/students/${id}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status })
+    });
+  },
+  delete: async (id: number) => {
+    return apiRequest<{ success: boolean; message: string }>(`/admin/students/${id}`, {
+      method: 'DELETE'
+    });
+  }
+};
+
+export const analyticsApi = {
+  track: async (path: string) => {
+    return apiRequest<{ success: boolean }>('/analytics/track', {
+      method: 'POST',
+      body: JSON.stringify({ path })
+    });
+  },
+  getOverview: async () => {
+    return apiRequest<{
+      success: boolean;
+      stats: {
+        monthly_visitors: number;
+        last_month_visitors: number;
+        total_visitors: number;
+        trend: number;
+        is_table_missing?: boolean;
+      }
+    }>('/analytics/overview');
+  }
+};
+
+

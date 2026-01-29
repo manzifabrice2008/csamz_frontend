@@ -15,6 +15,7 @@ export default function TeacherExamResults() {
     const [loading, setLoading] = useState(true);
     const [results, setResults] = useState<TeacherExamResult[]>([]);
     const [examTitle, setExamTitle] = useState("");
+    const [stats, setStats] = useState<any>(null);
 
     useEffect(() => {
         const fetchResults = async () => {
@@ -24,6 +25,7 @@ export default function TeacherExamResults() {
                 if (response.success) {
                     setResults(response.results);
                     setExamTitle(response.exam_title);
+                    setStats(response.stats);
                 }
             } catch (error: any) {
                 toast({
@@ -61,9 +63,68 @@ export default function TeacherExamResults() {
                         <h1 className="text-2xl font-bold tracking-tight">Exam Results</h1>
                         <p className="text-muted-foreground">
                             {loading ? "Loading..." : `Viewing results for "${examTitle}"`}
-                        </p>
                     </div>
                 </div>
+
+                {!loading && stats && (
+                    <div className="grid gap-4 md:grid-cols-4">
+                        <Card className="bg-gradient-to-br from-school-primary/5 to-transparent border-school-primary/20">
+                            <CardHeader className="pb-2">
+                                <CardDescription>Winning Rate</CardDescription>
+                                <CardTitle className="text-3xl font-bold text-school-primary">
+                                    {stats.winning_rate}%
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="text-xs text-muted-foreground">
+                                    Percentage of students passed
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        <Card>
+                            <CardHeader className="pb-2">
+                                <CardDescription>Average Score</CardDescription>
+                                <CardTitle className="text-3xl font-bold">
+                                    {stats.average_score}%
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="text-xs text-muted-foreground">
+                                    Mean performance of class
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        <Card>
+                            <CardHeader className="pb-2">
+                                <CardDescription>Passed</CardDescription>
+                                <CardTitle className="text-3xl font-bold text-emerald-600 dark:text-emerald-400">
+                                    {stats.pass_count}
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="text-xs text-muted-foreground">
+                                    Students scored above 50%
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        <Card>
+                            <CardHeader className="pb-2">
+                                <CardDescription>Total Submissions</CardDescription>
+                                <CardTitle className="text-3xl font-bold">
+                                    {stats.total_submissions}
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="text-xs text-muted-foreground">
+                                    Unique student attempts
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </div>
+                )}
 
                 <Card className="shadow-md">
                     <CardHeader className="flex flex-row items-center justify-between">
