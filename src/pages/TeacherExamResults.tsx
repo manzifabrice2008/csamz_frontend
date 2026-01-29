@@ -63,6 +63,7 @@ export default function TeacherExamResults() {
                         <h1 className="text-2xl font-bold tracking-tight">Exam Results</h1>
                         <p className="text-muted-foreground">
                             {loading ? "Loading..." : `Viewing results for "${examTitle}"`}
+                        </p>
                     </div>
                 </div>
 
