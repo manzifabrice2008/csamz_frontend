@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import AdminLayout from "@/components/AdminLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
 import { adminUserApi, AdminUser } from "@/services/api";
-import { Loader2, Trash2, RefreshCw, ShieldCheck, UserX, UserCheck, Shield } from "lucide-react";
+import { Loader2, Trash2, RefreshCw, ShieldCheck, UserX, UserCheck } from "lucide-react";
 import { getUser } from "@/lib/auth";
 
 export default function AdminUsers() {
@@ -141,39 +141,43 @@ export default function AdminUsers() {
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
-                                            {admins.map((admin) => (
-                                                <TableRow key={admin.id}>
-                                                    <TableCell>
-                                                        <div className="font-semibold">{admin.full_name}</div>
-                                                        <div className="text-xs text-muted-foreground">ID: {admin.id}</div>
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <div className="text-sm">@{admin.username}</div>
-                                                        <Badge variant="secondary" className="text-[10px] h-4 uppercase">
-                                                            {admin.role || "admin"}
-                                                        </Badge>
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <div className="text-sm">{admin.email}</div>
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <Badge className={(admin.status || "active") === "active" ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"}>
-                                                            {admin.status || "active"}
-                                                        </Badge>
-                                                    </TableCell>
-                                                    <TableCell className="text-right">
-                                                        <div className="flex justify-end gap-2">
-                                                            <Button
-                                                                size="sm"
-                                                                variant="outline"
-                                                                className={(admin.status || "active") === "active" ? "text-amber-600 border-amber-200" : "text-emerald-600 border-emerald-200"}
-                                                                onClick={() => handleStatusToggle(admin.id, admin.status || "active")}
-                                                                disabled={actionLoadingId === admin.id || admin.id === currentUser?.id}
-                                                            >
-                                                                {actionLoadingId === admin.id ? (
-                                                                    <Loader2 className="w-4 h-4 animate-spin" />
-                                                                ) : (
-                                                                    (admin.status || "active") === "active" ? (
+                                            {admins.map((admin) => {
+                                                const isActive = (admin.status || "active") === "active";
+                                                const isSelf = admin.id === currentUser?.id;
+                                                const isActionsDisabled = actionLoadingId === admin.id || isSelf;
+
+                                                return (
+                                                    <TableRow key={admin.id}>
+                                                        <TableCell>
+                                                            <div className="font-semibold">{admin.full_name}</div>
+                                                            <div className="text-xs text-muted-foreground">ID: {admin.id}</div>
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <div className="text-sm">@{admin.username}</div>
+                                                            <Badge variant="secondary" className="text-[10px] h-4 uppercase">
+                                                                {admin.role || "admin"}
+                                                            </Badge>
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <div className="text-sm">{admin.email}</div>
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <Badge className={isActive ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"}>
+                                                                {admin.status || "active"}
+                                                            </Badge>
+                                                        </TableCell>
+                                                        <TableCell className="text-right">
+                                                            <div className="flex justify-end gap-2">
+                                                                <Button
+                                                                    size="sm"
+                                                                    variant="outline"
+                                                                    className={isActive ? "text-amber-600 border-amber-200" : "text-emerald-600 border-emerald-200"}
+                                                                    onClick={() => handleStatusToggle(admin.id, admin.status || "active")}
+                                                                    disabled={isActionsDisabled}
+                                                                >
+                                                                    {actionLoadingId === admin.id ? (
+                                                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                                                    ) : isActive ? (
                                                                         <>
                                                                             <UserX className="w-4 h-4 mr-1" />
                                                                             Deactivate
@@ -183,23 +187,23 @@ export default function AdminUsers() {
                                                                             <UserCheck className="w-4 h-4 mr-1" />
                                                                             Activate
                                                                         </>
-                                                                    )
-                                                                )}
-                                                            </Button>
-                                                            <Button
-                                                                size="sm"
-                                                                variant="outline"
-                                                                className="text-rose-600 border-rose-200"
-                                                                onClick={() => handleDelete(admin.id)}
-                                                                disabled={actionLoadingId === admin.id || admin.id === currentUser?.id}
-                                                            >
-                                                                <Trash2 className="w-4 h-4 mr-1" />
-                                                                Delete
-                                                            </Button>
-                                                        </div>
-                                                    </TableCell>
-                                                </TableRow>
-                                            ))}
+                                                                    )}
+                                                                </Button>
+                                                                <Button
+                                                                    size="sm"
+                                                                    variant="outline"
+                                                                    className="text-rose-600 border-rose-200"
+                                                                    onClick={() => handleDelete(admin.id)}
+                                                                    disabled={isActionsDisabled}
+                                                                >
+                                                                    <Trash2 className="w-4 h-4 mr-1" />
+                                                                    Delete
+                                                                </Button>
+                                                            </div>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                );
+                                            })}
                                         </TableBody>
                                     </Table>
                                 </div>

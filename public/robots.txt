@@ -1,16 +1,23 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /teacher
+Disallow: /student
+Disallow: /api
+
 User-agent: Googlebot
 Allow: /
+Disallow: /admin
+Disallow: /teacher
+Disallow: /student
 
 User-agent: Bingbot
 Allow: /
 
-User-agent: Twitterbot
+User-agent: Slurp
 Allow: /
 
-User-agent: facebookexternalhit
-Allow: /
-
-User-agent: *
+User-agent: DuckDuckBot
 Allow: /
 
 Sitemap: https://collegiosamz.vercel.app/sitemap.xml
