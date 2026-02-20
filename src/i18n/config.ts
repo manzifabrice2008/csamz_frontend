@@ -15,8 +15,8 @@ const resources = {
       apply: 'Apply Now',
 
       // Hero Section
-      heroTitle: 'CSAMZ - Collegio Samz',
-      heroSubtitle: 'Collegio Santo Antonio Mariza Zaccariza',
+      heroTitle: 'CSAMZ - Collegio SAMZ',
+      heroSubtitle: 'Collegio Santo Antonio Maria Zaccaria',
       heroDescription: 'The center for technical excellence in Gicumbi, Muko. We provide world-class TVET education for successful careers at Collegio Santo Antonio Maria Zaccaria.',
       applyAdmission: 'Apply for Admission',
       explorePrograms: 'Explore Programs',
