@@ -1,27 +1,9 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { Target, Eye, Heart, Trophy, Code, Laptop, Cross, Church, User } from "lucide-react";
+import { Target, Eye, Heart, Trophy, Code, Laptop, Cross, Church } from "lucide-react";
 import nesaLogo from "@/assets/nesa.png";
 import rtbLogo from "@/assets/rtb.png";
 import rebLogo from "@/assets/REB_Logo.png";
 import AboutsImage from "@/assets/about.jpg";
-import Admin1 from "@/assets/IMG_20250523_113525_931.jpg";
-import Admin2 from "@/assets/IMG_20250523_113805_509.jpg";
-import Admin3 from "@/assets/IMG_20250523_113813_808.jpg";
-import Admin4 from "@/assets/IMG_20250523_114224_304.jpg";
-import Admin5 from "@/assets/IMG_20250523_114337_212.jpg";
-import Admin6 from "@/assets/IMG_20250523_114344_415.jpg";
-import AboutImage from "@/assets/economy.jpg";
-
-const administrationStaff: Array<{ role: string; name?: string; photo?: string }> = [
-  { role: "Head Master", photo: Admin1 },
-  { role: "Economy", photo: AboutImage },
-  { role: "DOD", photo: Admin2 },
-  { role: "DOS", photo: Admin3 },
-  { role: "Animateur", photo: Admin4 },
-  { role: "Metron", photo: Admin5 },
-  { role: "Secretary", photo: Admin6 },
-  { role: "Economy", photo: AboutImage },
-];
 
 const AboutSection = () => {
   return (
@@ -204,49 +186,6 @@ const AboutSection = () => {
               </p>
             </CardContent>
           </Card>
-        </div>
-
-        <div className="mt-20">
-          <div className="text-center mb-12 animate-fadeInDown">
-            <h3 className="text-3xl md:text-4xl font-bold mb-4">
-              <span className="gradient-text">Administration Staff</span>
-            </h3>
-            <p className="text-muted-foreground text-lg">
-              Dedicated leaders ensuring excellence in education and student support
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            {administrationStaff.map((member) => (
-              <Card
-                key={member.role}
-                className="hover-lift animate-fadeInUp shadow-lg border-2 hover:border-school-primary dark:hover:border-school-accent transition-all duration-300"
-              >
-                <CardContent className="p-6 text-center space-y-3">
-                  <div className="w-24 h-24 mx-auto rounded-full overflow-hidden border-2 border-school-primary/20 dark:border-school-accent/20 bg-gradient-to-br from-school-primary/10 to-school-secondary/10 flex items-center justify-center">
-                    {member.photo ? (
-                      <img
-                        src={member.photo}
-                        alt={(member.name || member.role) + " photo"}
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          (e.currentTarget as HTMLImageElement).style.display = "none";
-                        }}
-                      />
-                    ) : (
-                      <User className="w-10 h-10 text-muted-foreground" />
-                    )}
-                  </div>
-                  <h4 className="text-xl font-bold text-school-primary dark:text-school-accent">
-                    {member.name || member.role}
-                  </h4>
-                  {member.name && (
-                    <p className="text-sm text-muted-foreground">{member.role}</p>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
-          </div>
         </div>
 
         <div className="mt-20">

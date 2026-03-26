@@ -22,12 +22,16 @@ const TestimonialsSection = () => {
   const [averageRating, setAverageRating] = useState(4.9);
 
   useEffect(() => {
-    fetchTestimonials();
+    const controller = new AbortController();
+
+    fetchTestimonials(controller.signal);
+
+    return () => controller.abort();
   }, []);
 
-  const fetchTestimonials = async () => {
+  const fetchTestimonials = async (signal: AbortSignal) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/testimonials/approved`);
+      const response = await fetch(`${API_BASE_URL}/testimonials/approved`, { signal });
       if (response.ok) {
         const data = await response.json();
         setTestimonials(data);
@@ -39,6 +43,10 @@ const TestimonialsSection = () => {
         }
       }
     } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") {
+        return;
+      }
+
       console.error('Error fetching testimonials:', error);
     } finally {
       setLoading(false);

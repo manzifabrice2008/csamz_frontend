@@ -2,16 +2,21 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Award, Users, BookOpen } from "lucide-react";
 import { Link } from "react-router-dom";
-import heroImage from "@/assets/computer-lab.jpg";
+import heroImage from "@/assets/lab1.jpg";
 
 const SchoolHero = () => {
   const { t } = useTranslation();
   return (
     <section id="home" className="relative min-h-screen flex items-center overflow-hidden">
-      <div
-        className="absolute inset-0 bg-cover bg-center transition-transform duration-700 hover:scale-105"
-        style={{ backgroundImage: `url(${heroImage})` }}
-      >
+      <div className="absolute inset-0">
+        <img
+          src={heroImage}
+          alt="Students learning in the CSAM computer lab"
+          className="h-full w-full object-cover"
+          loading="eager"
+          fetchPriority="high"
+          decoding="async"
+        />
         <div className="absolute inset-0 bg-gradient-to-r from-school-primary/90 via-school-primary/80 to-school-primary/70 dark:from-school-primary/95 dark:via-school-primary/90 dark:to-school-primary/85"></div>
       </div>
 

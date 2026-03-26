@@ -1,7 +1,7 @@
 import Layout from "@/components/Layout";
 import ImageGallery from "@/components/ImageGallery";
 import { Code, Laptop, Users, Award } from "lucide-react";
-import SoftwareDev from "@/assets/computer-lab.jpg";
+import SoftwareDev from "@/assets/lab1.jpg";
 import sodImage01 from "@/assets/sod/3P0D4850.JPG";
 import sodImage02 from "@/assets/sod/3P0D4851.JPG";
 import sodImage03 from "@/assets/sod/3P0D4852.JPG";

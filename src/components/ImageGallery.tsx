@@ -5,10 +5,19 @@ import { Button } from "@/components/ui/button";
 interface ImageGalleryProps {
   images: string[];
   altPrefix?: string;
+  initialVisibleCount?: number;
 }
 
-export default function ImageGallery({ images, altPrefix = "Gallery image" }: ImageGalleryProps) {
+export default function ImageGallery({
+  images,
+  altPrefix = "Gallery image",
+  initialVisibleCount = 4,
+}: ImageGalleryProps) {
   const [selectedImage, setSelectedImage] = useState<number | null>(null);
+  const [visibleCount, setVisibleCount] = useState(initialVisibleCount);
+
+  const visibleImages = images.slice(0, visibleCount);
+  const hasMoreImages = visibleCount < images.length;
 
   const openLightbox = (index: number) => {
     setSelectedImage(index);
@@ -42,7 +51,7 @@ export default function ImageGallery({ images, altPrefix = "Gallery image" }: Im
     <>
       {/* Gallery Grid */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {images.map((src, index) => (
+        {visibleImages.map((src, index) => (
           <div 
             key={index} 
             className="relative overflow-hidden rounded-lg shadow-lg hover-lift animate-scaleIn cursor-pointer group"
@@ -53,6 +62,8 @@ export default function ImageGallery({ images, altPrefix = "Gallery image" }: Im
               src={src} 
               alt={`${altPrefix} ${index + 1}`}
               loading="lazy"
+              decoding="async"
+              sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
               className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-500"
             />
             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all duration-300 flex items-center justify-center">
@@ -63,6 +74,16 @@ export default function ImageGallery({ images, altPrefix = "Gallery image" }: Im
           </div>
         ))}
       </div>
+      {hasMoreImages && (
+        <div className="mt-6 text-center">
+          <Button
+            variant="outline"
+            onClick={() => setVisibleCount(images.length)}
+          >
+            Load All Photos
+          </Button>
+        </div>
+      )}
 
       {/* Lightbox Modal */}
       {selectedImage !== null && (
@@ -142,6 +163,7 @@ export default function ImageGallery({ images, altPrefix = "Gallery image" }: Im
                 src={src}
                 alt={`Thumbnail ${index + 1}`}
                 loading="lazy"
+                decoding="async"
                 className={`h-16 w-20 object-cover rounded cursor-pointer transition-all duration-300 ${
                   index === selectedImage 
                     ? 'ring-2 ring-school-accent scale-110' 
