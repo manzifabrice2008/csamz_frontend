@@ -5,9 +5,9 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import LoadingScreen from "./components/LoadingScreen";
-import AnalyticsTracker from "./components/AnalyticsTracker";
 
 // Lazy load pages for better performance
+const AnalyticsTracker = lazy(() => import("./components/AnalyticsTracker"));
 const Index = lazy(() => import("./pages/Index"));
 const About = lazy(() => import("./pages/About"));
 const Contact = lazy(() => import("./pages/Contact"));
@@ -77,7 +77,9 @@ const App = () => {
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <AnalyticsTracker />
+          <Suspense fallback={null}>
+            <AnalyticsTracker />
+          </Suspense>
           <Suspense fallback={<LoadingScreen />}>
             <Routes>
               <Route path="/" element={<Index />} />

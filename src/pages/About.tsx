@@ -1,10 +1,14 @@
+import { Suspense, lazy } from "react";
 import Layout from "@/components/Layout";
-import AboutSection from "@/components/AboutSection";
+
+const AboutSection = lazy(() => import("@/components/AboutSection"));
 
 export default function About() {
   return (
     <Layout>
-      <AboutSection />
+      <Suspense fallback={<div className="min-h-[900px]" aria-hidden="true" />}>
+        <AboutSection />
+      </Suspense>
     </Layout>
   );
 }

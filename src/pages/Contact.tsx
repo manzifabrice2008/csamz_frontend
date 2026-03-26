@@ -1,10 +1,14 @@
+import { Suspense, lazy } from "react";
 import Layout from "@/components/Layout";
-import ContactSection from "@/components/ContactSection";
+
+const ContactSection = lazy(() => import("@/components/ContactSection"));
 
 export default function Contact() {
   return (
     <Layout>
-      <ContactSection />
+      <Suspense fallback={<div className="min-h-[900px]" aria-hidden="true" />}>
+        <ContactSection />
+      </Suspense>
     </Layout>
   );
 }
