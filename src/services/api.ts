@@ -1084,13 +1084,13 @@ export interface StudentHistoryResult {
 export const examApi = {
   list: async (params?: { teacherId?: number }): Promise<{ success: boolean; exams: ExamSummary[] }> => {
     const queryString = params?.teacherId ? `?teacherId=${params.teacherId}` : "";
-    return apiRequest<{ success: boolean; exams: ExamSummary[] }>(`/exams${queryString}`);
+    return studentApiRequest<{ success: boolean; exams: ExamSummary[] }>(`/exams${queryString}`);
   },
 
   getQuestions: async (
     examId: number
   ): Promise<{ success: boolean; exam: ExamDetail; questions: ExamQuestion[] }> => {
-    return apiRequest<{ success: boolean; exam: ExamDetail; questions: ExamQuestion[] }>(
+    return studentApiRequest<{ success: boolean; exam: ExamDetail; questions: ExamQuestion[] }>(
       `/exams/${examId}/questions`
     );
   },
