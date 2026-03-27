@@ -72,20 +72,12 @@ export default function TeacherDashboard() {
   return (
     <TeacherLayout>
       <div className="p-6 space-y-6">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Teacher Dashboard</h1>
             <p className="text-muted-foreground">
               Welcome back, {teacher?.full_name}. Here's what's happening in your {tradeSummary || 'classes'}.
             </p>
-          </div>
-          <div className="flex gap-2">
-            <Button asChild>
-              <Link to="/teacher/exams/create">Create Exam</Link>
-            </Button>
-            <Button asChild variant="secondary">
-              <Link to="/teacher/assignments">Post Assignment</Link>
-            </Button>
           </div>
         </div>
 
