@@ -1688,6 +1688,10 @@ export const analyticsApi = {
         last_month_visitors: number;
         total_visitors: number;
         trend: number;
+        students_total: number;
+        students_online: number;
+        teachers_total: number;
+        teachers_online: number;
         is_table_missing?: boolean;
       }
     }>('/analytics/overview');

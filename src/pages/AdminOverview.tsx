@@ -17,8 +17,10 @@ import {
   UserCheck2,
   Eye,
   TrendingDown,
+  UserRoundCheck,
+  UserRound,
 } from "lucide-react";
-import { applicationsApi, newsApi, teacherAdminApi, analyticsApi } from "@/services/api";
+import { applicationsApi, newsApi, teacherAdminApi, analyticsApi, studentAdminApi } from "@/services/api";
 import { useToast } from "@/hooks/use-toast";
 
 export default function AdminOverview() {
@@ -41,6 +43,11 @@ export default function AdminOverview() {
     teachers: {
       total: 0,
       pending: 0,
+      online: 0,
+    },
+    students: {
+      total: 0,
+      online: 0,
     },
     visitors: {
       monthly: 0,
@@ -66,7 +73,16 @@ export default function AdminOverview() {
       const newsResponse = await newsApi.getAll();
 
       // Fetch analytics stats
-      let analyticsData = { monthly_visitors: 0, total_visitors: 0, trend: 0 };
+      let analyticsData = {
+        monthly_visitors: 0,
+        last_month_visitors: 0,
+        total_visitors: 0,
+        trend: 0,
+        students_total: 0,
+        students_online: 0,
+        teachers_total: 0,
+        teachers_online: 0,
+      };
       try {
         const analyticsResponse = await analyticsApi.getOverview();
         if (analyticsResponse.success) {
@@ -78,6 +94,7 @@ export default function AdminOverview() {
 
       // Fetch teachers stats
       const teachersResponse = await teacherAdminApi.list();
+      const studentsResponse = await studentAdminApi.list();
       const pendingTeachers = (teachersResponse.teachers || []).filter(t => t.status === 'pending').length;
 
       // Calculate this month's applications
@@ -126,8 +143,13 @@ export default function AdminOverview() {
           categories,
         },
         teachers: {
-          total: (teachersResponse.teachers || []).length,
+          total: analyticsData.teachers_total ?? (teachersResponse.teachers || []).length,
           pending: pendingTeachers,
+          online: analyticsData.teachers_online || 0,
+        },
+        students: {
+          total: analyticsData.students_total ?? (studentsResponse.students || []).length,
+          online: analyticsData.students_online || 0,
         },
         visitors: {
           monthly: analyticsData.monthly_visitors,
@@ -174,7 +196,7 @@ export default function AdminOverview() {
         </div>
 
         {/* Main Stats Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 animate-fadeInUp">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-7 gap-6 animate-fadeInUp">
           {/* Total Applications */}
           <Card className="hover-lift">
             <CardContent className="p-6">
@@ -296,6 +318,42 @@ export default function AdminOverview() {
                   </p>
                 </div>
               </Link>
+            </CardContent>
+          </Card>
+
+          <Card className="hover-lift border-cyan-500/20 bg-cyan-50/30 dark:bg-cyan-900/10">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-3 bg-cyan-100 dark:bg-cyan-900 rounded-lg">
+                  <UserRoundCheck className="w-6 h-6 text-cyan-600 dark:text-cyan-400" />
+                </div>
+                <span className="text-xs font-medium text-cyan-600">Live</span>
+              </div>
+              <div>
+                <p className="text-2xl font-bold">{stats.teachers.online}</p>
+                <p className="text-sm text-muted-foreground">Teachers Online</p>
+                <p className="text-xs text-cyan-600 mt-1">
+                  {stats.teachers.total} approved teachers
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="hover-lift border-sky-500/20 bg-sky-50/30 dark:bg-sky-900/10">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-3 bg-sky-100 dark:bg-sky-900 rounded-lg">
+                  <UserRound className="w-6 h-6 text-sky-600 dark:text-sky-400" />
+                </div>
+                <span className="text-xs font-medium text-sky-600">Live</span>
+              </div>
+              <div>
+                <p className="text-2xl font-bold">{stats.students.online}</p>
+                <p className="text-sm text-muted-foreground">Students Online</p>
+                <p className="text-xs text-sky-600 mt-1">
+                  {stats.students.total} total students
+                </p>
+              </div>
             </CardContent>
           </Card>
         </div>
