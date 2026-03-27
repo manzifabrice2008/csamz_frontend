@@ -47,10 +47,13 @@ export default function AdminTeachers() {
   const handleStatusChange = async (teacherId: number, status: TeacherStatus) => {
     try {
       setActionLoadingId(teacherId);
-      await teacherAdminApi.updateStatus(teacherId, status);
+      const response = await teacherAdminApi.updateStatus(teacherId, status);
       toast({
         title: "Success",
-        description: `Teacher marked as ${status}.`,
+        description: response.email.sent
+          ? `Teacher marked as ${status}. Email notification sent successfully.`
+          : `Teacher marked as ${status}, but email notification failed${response.email.error ? `: ${response.email.error}` : "."}`,
+        variant: response.email.sent ? "default" : "destructive",
       });
       await fetchTeachers();
     } catch (error: any) {

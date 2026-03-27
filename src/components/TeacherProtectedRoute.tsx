@@ -12,14 +12,36 @@ export default function TeacherProtectedRoute({ children }: TeacherProtectedRout
   const [allowed, setAllowed] = useState<boolean | null>(null);
 
   useEffect(() => {
+    let active = true;
+
     const isLoggedIn = teacherAuthApi.isAuthenticated();
     if (!isLoggedIn) {
       const redirect = encodeURIComponent(location.pathname + location.search);
-      navigate(`/teacher/login?redirect=${redirect}`);
+      navigate(`/teacher/login?redirect=${redirect}`, { replace: true });
       return;
     }
 
-    setAllowed(true);
+    const validateSession = async () => {
+      try {
+        await teacherAuthApi.getCurrentTeacher();
+        if (active) {
+          setAllowed(true);
+        }
+      } catch {
+        teacherAuthApi.logout();
+        if (active) {
+          setAllowed(false);
+          const redirect = encodeURIComponent(location.pathname + location.search);
+          navigate(`/teacher/login?redirect=${redirect}`, { replace: true });
+        }
+      }
+    };
+
+    void validateSession();
+
+    return () => {
+      active = false;
+    };
   }, [location.pathname, location.search, navigate]);
 
   if (allowed === null) {
@@ -32,4 +54,3 @@ export default function TeacherProtectedRoute({ children }: TeacherProtectedRout
 
   return <>{children}</>;
 }
-

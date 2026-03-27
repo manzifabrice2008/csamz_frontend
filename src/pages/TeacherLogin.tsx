@@ -19,10 +19,32 @@ export default function TeacherLogin() {
   });
 
   useEffect(() => {
-    if (teacherAuthApi.isAuthenticated()) {
-      navigate("/teacher/dashboard", { replace: true });
-    }
-  }, [navigate]);
+    let active = true;
+
+    const validateSession = async () => {
+      if (!teacherAuthApi.isAuthenticated()) {
+        return;
+      }
+
+      try {
+        const response = await teacherAuthApi.getCurrentTeacher();
+        if (active) {
+          const redirectTo = searchParams.get("redirect");
+          navigate(redirectTo || "/teacher/dashboard", { replace: true });
+        }
+        return response;
+      } catch {
+        teacherAuthApi.logout();
+        return null;
+      }
+    };
+
+    void validateSession();
+    
+    return () => {
+      active = false;
+    };
+  }, [navigate, searchParams]);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -152,4 +174,3 @@ export default function TeacherLogin() {
     </Layout>
   );
 }
-

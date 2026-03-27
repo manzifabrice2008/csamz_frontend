@@ -23,7 +23,6 @@ const NewsDetail = lazy(() => import("./pages/NewsDetail"));
 const Blog = lazy(() => import("./pages/Blog"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const AdminLogin = lazy(() => import("./pages/AdminLogin"));
-const AdminRegister = lazy(() => import("./pages/AdminRegister"));
 const ApplyNow = lazy(() => import("./pages/ApplyNow"));
 const AdminApplications = lazy(() => import("./pages/AdminApplications"));
 const AdminOverview = lazy(() => import("./pages/AdminOverview"));
@@ -250,7 +249,6 @@ const App = () => {
               />
               <Route path="/testimonial/submit" element={<SubmitTestimonial />} />
               <Route path="/admin/login" element={<AdminLogin />} />
-              <Route path="/admin/register" element={<AdminRegister />} />
               <Route path="/admin" element={<ProtectedRoute><AdminOverview /></ProtectedRoute>} />
               <Route path="/admin/overview" element={<ProtectedRoute><AdminOverview /></ProtectedRoute>} />
               <Route path="/admin/dashboard" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />

@@ -1141,7 +1141,15 @@ export const teacherAdminApi = {
   },
 
   updateStatus: async (id: number, status: 'pending' | 'approved' | 'rejected') => {
-    return apiRequest<{ success: boolean; message: string }>(`/teacher/auth/admin/${id}/status`, {
+    return apiRequest<{
+      success: boolean;
+      message: string;
+      email: {
+        attempted: boolean;
+        sent: boolean;
+        error: string | null;
+      };
+    }>(`/teacher/auth/admin/${id}/status`, {
       method: 'PATCH',
       body: JSON.stringify({ status }),
     });

@@ -20,10 +20,30 @@ export default function StudentLogin() {
   });
 
   useEffect(() => {
-    if (studentAuthApi.isAuthenticated()) {
-      navigate("/student/dashboard", { replace: true });
-    }
-  }, [navigate]);
+    let active = true;
+
+    const validateSession = async () => {
+      if (!studentAuthApi.isAuthenticated()) {
+        return;
+      }
+
+      try {
+        await studentAuthApi.getCurrentStudent();
+        if (active) {
+          const redirectTo = searchParams.get("redirect");
+          navigate(redirectTo || "/student/dashboard", { replace: true });
+        }
+      } catch {
+        studentAuthApi.logout();
+      }
+    };
+
+    void validateSession();
+
+    return () => {
+      active = false;
+    };
+  }, [navigate, searchParams]);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +11,7 @@ import { API_BASE_URL } from "@/services/api";
 
 export default function AdminLogin() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -21,10 +22,41 @@ export default function AdminLogin() {
 
   // Redirect if already logged in
   useEffect(() => {
-    if (isAuthenticated()) {
-      navigate("/admin/overview");
-    }
-  }, [navigate]);
+    let active = true;
+
+    const validateSession = async () => {
+      if (!isAuthenticated()) {
+        return;
+      }
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/auth/me`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error("Session invalid");
+        }
+
+        if (active) {
+          const redirectTo = searchParams.get("redirect");
+          navigate(redirectTo || "/admin/overview", { replace: true });
+        }
+      } catch {
+        localStorage.removeItem("authToken");
+        localStorage.removeItem("user");
+        localStorage.removeItem("adminUser");
+      }
+    };
+
+    void validateSession();
+
+    return () => {
+      active = false;
+    };
+  }, [navigate, searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,7 +83,8 @@ export default function AdminLogin() {
         });
 
         // Redirect to admin overview
-        navigate("/admin/overview");
+        const redirectTo = searchParams.get("redirect");
+        navigate(redirectTo || "/admin/overview", { replace: true });
       } else {
         toast({
           title: "Login Failed",
@@ -141,13 +174,7 @@ export default function AdminLogin() {
               </Button>
 
               <div className="text-center text-sm text-muted-foreground">
-                Don't have an account?{" "}
-                <Link
-                  to="/admin/register"
-                  className="text-school-primary dark:text-school-accent font-semibold hover:underline"
-                >
-                  Register here
-                </Link>
+                Admin accounts are created by the system administrator.
               </div>
             </form>
           </CardContent>
