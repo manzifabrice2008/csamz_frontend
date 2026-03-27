@@ -4,19 +4,32 @@ import StudentLayout from "@/components/StudentLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, CalendarDays, Clock4, Trophy, ChevronRight, FileText } from "lucide-react";
-import { examApi, StudentHistoryResult } from "@/services/api";
+import { Loader2, CalendarDays, Clock4, Trophy, ChevronRight, FileText, Medal, BookOpen, Users } from "lucide-react";
+import { examApi, StudentClassLeaderboardEntry, StudentClassSubjectSummary, StudentClassSummary, StudentHistoryResult } from "@/services/api";
 
 export default function StudentResults() {
     const [results, setResults] = useState<StudentHistoryResult[]>([]);
+    const [summary, setSummary] = useState<StudentClassSummary | null>(null);
+    const [subjects, setSubjects] = useState<StudentClassSubjectSummary[]>([]);
+    const [leaderboard, setLeaderboard] = useState<StudentClassLeaderboardEntry[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchHistory = async () => {
             try {
-                const response = await examApi.getStudentHistory();
-                if (response.success) {
-                    setResults(response.results);
+                const [historyResponse, classSummaryResponse] = await Promise.all([
+                    examApi.getStudentHistory(),
+                    examApi.getClassSummary(),
+                ]);
+
+                if (historyResponse.success) {
+                    setResults(historyResponse.results);
+                }
+
+                if (classSummaryResponse.success) {
+                    setSummary(classSummaryResponse.summary);
+                    setSubjects(classSummaryResponse.subjects);
+                    setLeaderboard(classSummaryResponse.leaderboard);
                 }
             } catch (error) {
                 console.error("Failed to fetch results", error);
@@ -44,9 +57,114 @@ export default function StudentResults() {
                     <div>
                         <h1 className="text-3xl font-bold tracking-tight">My Results</h1>
                         <p className="text-muted-foreground mt-2">
-                            View your exam history, scores, and grades.
+                            View your exam history, your class performance, and your grades in every subject.
                         </p>
                     </div>
+
+                    {loading ? null : summary ? (
+                        <div className="grid gap-4 md:grid-cols-3">
+                            <Card>
+                                <CardContent className="pt-6">
+                                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                        <Trophy className="w-4 h-4" />
+                                        Overall Average
+                                    </div>
+                                    <p className="mt-2 text-3xl font-bold">{summary.student_average}%</p>
+                                    <p className="text-xs text-muted-foreground">Across {summary.exams_taken} exam{summary.exams_taken === 1 ? "" : "s"}</p>
+                                </CardContent>
+                            </Card>
+                            <Card>
+                                <CardContent className="pt-6">
+                                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                        <Users className="w-4 h-4" />
+                                        Class Average
+                                    </div>
+                                    <p className="mt-2 text-3xl font-bold">{summary.class_average}%</p>
+                                    <p className="text-xs text-muted-foreground">{summary.trade} - {summary.level}</p>
+                                </CardContent>
+                            </Card>
+                            <Card>
+                                <CardContent className="pt-6">
+                                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                        <Medal className="w-4 h-4" />
+                                        Class Rank
+                                    </div>
+                                    <p className="mt-2 text-3xl font-bold">{summary.student_rank ? `#${summary.student_rank}` : "-"}</p>
+                                    <p className="text-xs text-muted-foreground">Out of {summary.class_size} students</p>
+                                </CardContent>
+                            </Card>
+                        </div>
+                    ) : null}
+
+                    {!loading && subjects.length > 0 ? (
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <BookOpen className="w-5 h-5 text-school-primary" />
+                                    Subject Performance
+                                </CardTitle>
+                                <CardDescription>
+                                    Your grade average and rank in every subject.
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="grid gap-4 md:grid-cols-2">
+                                    {subjects.map((subject) => (
+                                        <div key={subject.subject} className="rounded-lg border p-4 space-y-2">
+                                            <div className="flex items-center justify-between gap-3">
+                                                <h3 className="font-semibold">{subject.subject}</h3>
+                                                <Badge variant="outline">
+                                                    {subject.student_rank ? `Rank #${subject.student_rank}` : "No rank"}
+                                                </Badge>
+                                            </div>
+                                            <div className="flex items-center justify-between text-sm">
+                                                <span className="text-muted-foreground">Your average</span>
+                                                <span className="font-semibold">{subject.student_average}%</span>
+                                            </div>
+                                            <div className="flex items-center justify-between text-sm">
+                                                <span className="text-muted-foreground">Class average</span>
+                                                <span className="font-semibold">{subject.class_average}%</span>
+                                            </div>
+                                            <div className="flex items-center justify-between text-sm">
+                                                <span className="text-muted-foreground">Exams taken</span>
+                                                <span className="font-semibold">{subject.exams_taken}</span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </CardContent>
+                        </Card>
+                    ) : null}
+
+                    {!loading && leaderboard.length > 0 ? (
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <Medal className="w-5 h-5 text-school-primary" />
+                                    Class Leaderboard
+                                </CardTitle>
+                                <CardDescription>
+                                    Overall class grades across all exams.
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="space-y-3">
+                                    {leaderboard.map((entry) => (
+                                        <div key={entry.student_id} className="flex items-center justify-between rounded-lg border p-3">
+                                            <div>
+                                                <p className="font-medium">{entry.full_name}</p>
+                                                <p className="text-xs text-muted-foreground">@{entry.username} - {entry.exams_taken} exam{entry.exams_taken === 1 ? "" : "s"}</p>
+                                            </div>
+                                            <div className="text-right">
+                                                <p className="font-semibold">#{entry.rank}</p>
+                                                <p className="text-sm text-muted-foreground">{entry.average_percentage}% average</p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </CardContent>
+                        </Card>
+                    ) : null}
 
                     <Card>
                         <CardHeader>

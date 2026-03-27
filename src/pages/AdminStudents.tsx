@@ -12,7 +12,7 @@ export default function AdminStudents() {
     const { toast } = useToast();
     const [students, setStudents] = useState<StudentUser[]>([]);
     const [loading, setLoading] = useState(true);
-    const [actionLoadingId, setActionLoadingId] = useState<number | null>(null);
+    const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
 
     const fetchStudents = async () => {
         try {
@@ -36,7 +36,7 @@ export default function AdminStudents() {
         fetchStudents();
     }, []);
 
-    const handleStatusToggle = async (studentId: number, currentStatus: string) => {
+    const handleStatusToggle = async (studentId: string, currentStatus: string) => {
         try {
             setActionLoadingId(studentId);
             const newStatus = currentStatus === "active" ? "inactive" : "active";
@@ -60,7 +60,7 @@ export default function AdminStudents() {
         }
     };
 
-    const handleDelete = async (studentId: number) => {
+    const handleDelete = async (studentId: string) => {
         if (!window.confirm("Are you sure you want to delete this student? This action cannot be undone.")) return;
 
         try {

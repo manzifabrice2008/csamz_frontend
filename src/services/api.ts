@@ -45,6 +45,29 @@ const invalidateRequestCache = () => {
   inflightGetRequests.clear();
 };
 
+const extractApiErrorMessage = (data: any, fallback: string) => {
+  if (data?.message && typeof data.message === 'string') {
+    return data.message;
+  }
+
+  if (Array.isArray(data?.errors) && data.errors.length > 0) {
+    const firstError = data.errors[0];
+    if (typeof firstError === 'string') {
+      return firstError;
+    }
+
+    if (firstError?.msg && typeof firstError.msg === 'string') {
+      return firstError.msg;
+    }
+  }
+
+  if (typeof data === 'string' && data) {
+    return data;
+  }
+
+  return fallback;
+};
+
 // Generic API request handler
 async function apiRequest<T>(
   endpoint: string,
@@ -119,11 +142,7 @@ async function apiRequest<T>(
       }
 
       if (!response.ok) {
-        throw new Error(
-          (data && data.message) ||
-          (typeof data === 'string' && data) ||
-          `API request failed with status ${response.status}`
-        );
+        throw new Error(extractApiErrorMessage(data, `API request failed with status ${response.status}`));
       }
 
       if (cacheKey) {
@@ -415,7 +434,7 @@ const studentApiRequest = async <T>(endpoint: string, options: RequestInit = {})
     const data = await response.json();
 
     if (!response.ok) {
-      throw new Error(data.message || 'Request failed');
+      throw new Error(extractApiErrorMessage(data, 'Request failed'));
     }
 
     if (cacheKey) {
@@ -1030,7 +1049,7 @@ const teacherApiRequest = async <T>(endpoint: string, options: RequestInit = {})
     const data = await response.json();
 
     if (!response.ok) {
-      throw new Error(data.message || 'Request failed');
+      throw new Error(extractApiErrorMessage(data, 'Request failed'));
     }
 
     if (cacheKey) {
@@ -1170,6 +1189,7 @@ export interface ExamSummary {
   exam_code?: string | null;
   teacher_name?: string | null;
   already_taken?: boolean;
+  status?: 'draft' | 'published';
 }
 
 export interface ExamQuestion {
@@ -1195,6 +1215,7 @@ export interface ExamDetail {
   updated_at?: string;
   question_count?: number;
   already_taken?: boolean;
+  status?: 'draft' | 'published';
 }
 
 export interface SubmitExamPayload {
@@ -1293,6 +1314,34 @@ export interface StudentHistoryResult {
   submittedAt: string;
 }
 
+export interface StudentClassSummary {
+  trade: string;
+  level: string;
+  exams_taken: number;
+  student_average: number;
+  class_average: number;
+  student_rank: number | null;
+  class_size: number;
+}
+
+export interface StudentClassSubjectSummary {
+  subject: string;
+  exams_taken: number;
+  student_average: number;
+  class_average: number;
+  student_rank: number | null;
+  class_size: number;
+}
+
+export interface StudentClassLeaderboardEntry {
+  rank: number;
+  student_id: string;
+  full_name: string;
+  username: string;
+  exams_taken: number;
+  average_percentage: number;
+}
+
 export const examApi = {
   list: async (params?: { teacherId?: string | number }): Promise<{ success: boolean; exams: ExamSummary[] }> => {
     const queryString = params?.teacherId ? `?teacherId=${params.teacherId}` : "";
@@ -1320,6 +1369,15 @@ export const examApi = {
 
   getStudentHistory: async () => {
     return studentApiRequest<{ success: boolean; results: StudentHistoryResult[] }>(`/results/history`);
+  },
+
+  getClassSummary: async () => {
+    return studentApiRequest<{
+      success: boolean;
+      summary: StudentClassSummary;
+      subjects: StudentClassSubjectSummary[];
+      leaderboard: StudentClassLeaderboardEntry[];
+    }>(`/results/class-summary`);
   },
 };
 
@@ -1367,6 +1425,11 @@ export const teacherExamApi = {
   delete: async (examId: string | number) => {
     return teacherApiRequest<{ success: boolean; message: string }>(`/exams/${examId}`, {
       method: "DELETE",
+    });
+  },
+  publish: async (examId: string | number) => {
+    return teacherApiRequest<{ success: boolean; message: string; exam: ExamSummary }>(`/exams/${examId}/publish`, {
+      method: "PATCH",
     });
   },
 
@@ -1585,6 +1648,11 @@ export const teacherStudentsApi = {
   },
   getById: async (id: string | number) => {
     return teacherApiRequest<{ success: boolean; student: TeacherStudent }>('/teacher/students/' + id);
+  },
+  delete: async (id: string) => {
+    return teacherApiRequest<{ success: boolean; message: string }>('/teacher/students/' + id, {
+      method: 'DELETE',
+    });
   }
 };
 
@@ -1641,13 +1709,13 @@ export const studentAdminApi = {
   list: async () => {
     return apiRequest<{ success: boolean; students: StudentUser[] }>('/admin/students');
   },
-  updateStatus: async (id: number, status: 'active' | 'inactive') => {
+  updateStatus: async (id: string, status: 'active' | 'inactive') => {
     return apiRequest<{ success: boolean; message: string; student: StudentUser }>(`/admin/students/${id}/status`, {
       method: 'PATCH',
       body: JSON.stringify({ status })
     });
   },
-  delete: async (id: number) => {
+  delete: async (id: string) => {
     return apiRequest<{ success: boolean; message: string }>(`/admin/students/${id}`, {
       method: 'DELETE'
     });

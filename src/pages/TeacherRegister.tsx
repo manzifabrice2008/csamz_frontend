@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { teacherAuthApi } from "@/services/api";
-import { UserPlus, Mail, Lock, User } from "lucide-react";
+import { UserPlus, Mail, Lock } from "lucide-react";
 
 const tradeOptions = [
   "Software Development",
@@ -253,14 +253,6 @@ export default function TeacherRegister() {
                 Already registered?{" "}
                 <Link to="/teacher/login" className="text-school-primary dark:text-school-accent font-semibold hover:underline">
                   Go to teacher login
-                </Link>
-              </p>
-
-              <p className="text-xs text-muted-foreground text-center flex items-center justify-center gap-1">
-                <User className="w-3 h-3" />
-                Admin accounts are managed separately.{" "}
-                <Link to="/admin/login" className="text-school-primary dark:text-school-accent font-semibold hover:underline">
-                  Admin login
                 </Link>
               </p>
             </form>

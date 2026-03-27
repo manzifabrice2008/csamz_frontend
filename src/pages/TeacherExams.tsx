@@ -56,6 +56,7 @@ export default function TeacherExams() {
 
   // Question Form State
   const [savingQuestion, setSavingQuestion] = useState(false);
+  const [publishingExam, setPublishingExam] = useState(false);
   const [editingQuestionId, setEditingQuestionId] = useState<number | null>(null);
   const [questionForm, setQuestionForm] = useState({
     question_text: "",
@@ -398,6 +399,32 @@ export default function TeacherExams() {
     }
   };
 
+  const handlePublishExam = async () => {
+    if (!examDetail?.id) return;
+
+    try {
+      setPublishingExam(true);
+      const response = await teacherExamApi.publish(examDetail.id);
+
+      if (response.success) {
+        setExamDetail((current) => current ? { ...current, ...response.exam } : current);
+        setExams((current) => current.map((exam) => exam.id === response.exam.id ? { ...exam, ...response.exam } : exam));
+        toast({
+          title: "Exam published",
+          description: "The full exam is now available to students.",
+        });
+      }
+    } catch (error: any) {
+      toast({
+        title: "Publish failed",
+        description: error?.message || "Failed to publish exam",
+        variant: "destructive",
+      });
+    } finally {
+      setPublishingExam(false);
+    }
+  };
+
   return (
     <TeacherLayout>
       <div className="p-6 space-y-6">
@@ -581,6 +608,9 @@ export default function TeacherExams() {
                                 {exam.exam_code}
                               </Badge>
                             )}
+                            <Badge variant={exam.status === "published" ? "default" : "secondary"} className="text-xs">
+                              {exam.status === "published" ? "Published" : "Draft"}
+                            </Badge>
                           </div>
                           <div className="flex items-center gap-2 text-sm text-muted-foreground">
                             <Badge variant="secondary" className="text-xs">
@@ -668,15 +698,40 @@ export default function TeacherExams() {
               ) : examDetail ? (
                 <>
                   <form className="space-y-4" onSubmit={handleQuestionSubmit}>
-                    <div className="flex items-center justify-between">
-                      <h3 className="font-semibold text-lg">
-                        {editingQuestionId ? "Edit question" : "Add new question"}
-                      </h3>
-                      {editingQuestionId && (
-                        <Button variant="ghost" size="sm" onClick={resetQuestionForm}>
-                          Cancel edit
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <h3 className="font-semibold text-lg">
+                          {editingQuestionId ? "Edit question" : "Add new question"}
+                        </h3>
+                        <p className="text-xs text-muted-foreground">
+                          Status: {examDetail.status === "published" ? "Published" : "Draft"}.
+                          Finish adding questions, then publish the full exam.
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {editingQuestionId && (
+                          <Button variant="ghost" size="sm" onClick={resetQuestionForm}>
+                            Cancel edit
+                          </Button>
+                        )}
+                        <Button
+                          type="button"
+                          variant={examDetail.status === "published" ? "secondary" : "default"}
+                          onClick={handlePublishExam}
+                          disabled={publishingExam || questions.length === 0 || examDetail.status === "published"}
+                        >
+                          {publishingExam ? (
+                            <>
+                              <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                              Publishing...
+                            </>
+                          ) : examDetail.status === "published" ? (
+                            "Published"
+                          ) : (
+                            "Finish and Publish Exam"
+                          )}
                         </Button>
-                      )}
+                      </div>
                     </div>
                     <div>
                       <label className="text-sm font-medium block mb-1">Question text</label>

@@ -12,10 +12,11 @@ import {
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Mail, Phone, BookOpen, Filter, Users } from "lucide-react";
+import { Search, Mail, Phone, BookOpen, Filter, Users, Trash2 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
 import {
   Select,
   SelectContent,
@@ -46,11 +47,13 @@ const formatLevel = (value?: string | null) => {
 };
 
 export default function TeacherStudents() {
+  const { toast } = useToast();
   const [students, setStudents] = useState<Student[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTrade, setSelectedTrade] = useState<string>("all");
   const [selectedLevel, setSelectedLevel] = useState<string>("all");
   const [loading, setLoading] = useState(true);
+  const [deletingStudentId, setDeletingStudentId] = useState<string | null>(null);
   const teacher = teacherAuthApi.getStoredTeacher();
 
   const allowedTrades = useMemo(
@@ -137,6 +140,33 @@ export default function TeacherStudents() {
   const selectedClassLabel = `${selectedTrade === "all" ? "All trades" : selectedTrade} - ${
     selectedLevel === "all" ? "All levels" : formatLevel(selectedLevel)
   }`;
+
+  const handleDeleteStudent = async (studentId: string, studentName: string) => {
+    if (!window.confirm(`Delete ${studentName}? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      setDeletingStudentId(studentId);
+      const response = await teacherStudentsApi.delete(studentId);
+
+      if (response.success) {
+        setStudents((current) => current.filter((student) => student.id !== studentId));
+        toast({
+          title: "Student deleted",
+          description: `${studentName} was removed successfully.`,
+        });
+      }
+    } catch (error: any) {
+      toast({
+        title: "Delete failed",
+        description: error?.message || "Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setDeletingStudentId(null);
+    }
+  };
 
   return (
     <TeacherLayout>
@@ -324,11 +354,23 @@ export default function TeacherStudents() {
                             </Badge>
                           </TableCell>
                           <TableCell className="text-right">
-                            <Link to={`/teacher/students/${student.id}`}>
-                              <Button variant="ghost" size="sm">
-                                View Details
+                            <div className="flex justify-end gap-2">
+                              <Link to={`/teacher/students/${student.id}`}>
+                                <Button variant="ghost" size="sm">
+                                  View Details
+                                </Button>
+                              </Link>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="text-rose-600 border-rose-200"
+                                onClick={() => handleDeleteStudent(student.id, student.full_name)}
+                                disabled={deletingStudentId === student.id}
+                              >
+                                <Trash2 className="mr-1 h-4 w-4" />
+                                Delete
                               </Button>
-                            </Link>
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))}
