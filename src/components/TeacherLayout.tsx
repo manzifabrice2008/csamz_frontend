@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -16,9 +16,8 @@ import {
   ChevronLeft,
   GraduationCap,
   PenTool,
-  BookOpen,
 } from "lucide-react";
-import { teacherAuthApi } from "@/services/api";
+import { teacherAuthApi, teacherStatsApi } from "@/services/api";
 
 interface TeacherLayoutProps {
   children: React.ReactNode;
@@ -26,14 +25,39 @@ interface TeacherLayoutProps {
 
 export default function TeacherLayout({ children }: TeacherLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [quickStats, setQuickStats] = useState({
+    totalStudents: 0,
+    totalExams: 0,
+  });
   const location = useLocation();
   const navigate = useNavigate();
   const teacher = teacherAuthApi.getStoredTeacher();
+  const teacherTradeSummary = teacher?.trades?.length
+    ? teacher.trades.join(", ")
+    : teacher?.trade || "Teacher";
 
   const handleLogout = () => {
     teacherAuthApi.logout();
     navigate("/teacher/login");
   };
+
+  useEffect(() => {
+    const fetchQuickStats = async () => {
+      try {
+        const response = await teacherStatsApi.get();
+        if (response.success) {
+          setQuickStats({
+            totalStudents: response.stats.totalStudents,
+            totalExams: response.stats.totalExams,
+          });
+        }
+      } catch (error) {
+        console.error("Failed to fetch teacher quick stats", error);
+      }
+    };
+
+    fetchQuickStats();
+  }, []);
 
   const navItems = [
     {
@@ -59,12 +83,6 @@ export default function TeacherLayout({ children }: TeacherLayoutProps) {
       path: "/teacher/analytics",
       icon: BarChart3,
       description: "Student performance",
-    },
-    {
-      name: "Assessment Tools",
-      path: "/teacher/assessments",
-      icon: BookOpen,
-      description: "Holiday assessments",
     },
     {
       name: "Profile",
@@ -113,7 +131,7 @@ export default function TeacherLayout({ children }: TeacherLayoutProps) {
             <div className="text-right">
               <div className="text-sm font-medium">{teacher?.full_name || "Teacher"}</div>
               <div className="text-xs text-muted-foreground">
-                {teacher?.trade || "Teacher"} • ID: {teacher?.id || "N/A"}
+                {teacherTradeSummary} • ID: {teacher?.id || "N/A"}
               </div>
             </div>
 
@@ -183,11 +201,11 @@ export default function TeacherLayout({ children }: TeacherLayoutProps) {
             </div>
             <div className="grid grid-cols-2 gap-2 text-xs">
               <div className="text-center p-2 bg-background rounded">
-                <div className="font-medium">24</div>
+                <div className="font-medium">{quickStats.totalStudents}</div>
                 <div className="text-muted-foreground">Students</div>
               </div>
               <div className="text-center p-2 bg-background rounded">
-                <div className="font-medium">8</div>
+                <div className="font-medium">{quickStats.totalExams}</div>
                 <div className="text-muted-foreground">Exams</div>
               </div>
             </div>

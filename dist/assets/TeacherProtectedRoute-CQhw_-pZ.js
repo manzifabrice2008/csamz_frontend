@@ -1,0 +1,1 @@
+import{b as u,u as i,r as a,V as l,j as r}from"./index-Dje1i0OD.js";function f({children:o}){const t=u(),e=i(),[n,s]=a.useState(null);return a.useEffect(()=>{if(!l.isAuthenticated()){const c=encodeURIComponent(e.pathname+e.search);t(`/teacher/login?redirect=${c}`);return}s(!0)},[e.pathname,e.search,t]),n===null||!n?null:r.jsx(r.Fragment,{children:o})}export{f as default};

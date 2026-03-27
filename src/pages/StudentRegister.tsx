@@ -18,7 +18,7 @@ import { UserPlus, User, Mail, Lock, GraduationCap } from "lucide-react";
 
 const tradeOptions = [
   "Software Development",
-  "Computer Systems and Networks",
+  "Computer System and Architecture",
   "Plumbing Technology",
   "Building Construction",
   "Wood Technology",

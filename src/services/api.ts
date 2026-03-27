@@ -3,12 +3,55 @@ import { getAuthToken, logout as authLogout, login as authLogin, isAuthenticated
 // API Configuration
 export const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://csamz-backend.onrender.com/api';
 
+const GET_CACHE_TTL_MS = 15000;
+const requestCache = new Map<string, { expiresAt: number; data: unknown }>();
+const inflightGetRequests = new Map<string, Promise<unknown>>();
+
+const cloneCachedData = <T,>(data: T): T => {
+  if (typeof structuredClone === 'function') {
+    return structuredClone(data);
+  }
+
+  try {
+    return JSON.parse(JSON.stringify(data)) as T;
+  } catch {
+    return data;
+  }
+};
+
+const buildGetCacheKey = (scope: string, endpoint: string, token: string | null) => `${scope}:${token || 'guest'}:${endpoint}`;
+
+const getCachedResponse = <T,>(cacheKey: string): T | null => {
+  const cached = requestCache.get(cacheKey);
+  if (!cached) return null;
+
+  if (cached.expiresAt <= Date.now()) {
+    requestCache.delete(cacheKey);
+    return null;
+  }
+
+  return cloneCachedData(cached.data as T);
+};
+
+const setCachedResponse = <T,>(cacheKey: string, data: T) => {
+  requestCache.set(cacheKey, {
+    expiresAt: Date.now() + GET_CACHE_TTL_MS,
+    data: cloneCachedData(data),
+  });
+};
+
+const invalidateRequestCache = () => {
+  requestCache.clear();
+  inflightGetRequests.clear();
+};
+
 // Generic API request handler
 async function apiRequest<T>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<T> {
   const token = getAuthToken();
+  const method = (options.method || 'GET').toUpperCase();
 
   // Initialize headers
   const headers: HeadersInit = {};
@@ -23,48 +66,81 @@ async function apiRequest<T>(
     headers['Authorization'] = `Bearer ${token}`;
   }
 
+  if (method !== 'GET') {
+    invalidateRequestCache();
+  }
+
+  const cacheKey = method === 'GET' ? buildGetCacheKey('admin', endpoint, token) : null;
+
+  if (cacheKey) {
+    const cached = getCachedResponse<T>(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
+    const inflightRequest = inflightGetRequests.get(cacheKey);
+    if (inflightRequest) {
+      return cloneCachedData(await inflightRequest as T);
+    }
+  }
+
   try {
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-      ...options,
-      headers: {
-        ...headers,
-        ...options.headers,
-      },
-    });
+    const fetchRequest = (async () => {
+      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+        ...options,
+        headers: {
+          ...headers,
+          ...options.headers,
+        },
+      });
 
-    // Handle empty responses
-    const contentType = response.headers.get('content-type');
-    let data: any;
+      // Handle empty responses
+      const contentType = response.headers.get('content-type');
+      let data: any;
 
-    if (contentType && contentType.includes('application/json')) {
-      data = await response.json();
-    } else {
-      data = await response.text();
-      if (data) {
-        try {
-          data = JSON.parse(data);
-        } catch (e) {
-          // If not JSON, keep as text
+      if (contentType && contentType.includes('application/json')) {
+        data = await response.json();
+      } else {
+        data = await response.text();
+        if (data) {
+          try {
+            data = JSON.parse(data);
+          } catch (e) {
+            // If not JSON, keep as text
+          }
         }
       }
+
+      // Handle unauthorized - logout user
+      if (response.status === 401) {
+        authLogout();
+        window.location.href = '/admin/login';
+        throw new Error('Session expired. Please login again.');
+      }
+
+      if (!response.ok) {
+        throw new Error(
+          (data && data.message) ||
+          (typeof data === 'string' && data) ||
+          `API request failed with status ${response.status}`
+        );
+      }
+
+      if (cacheKey) {
+        setCachedResponse(cacheKey, data);
+      }
+
+      return data as T;
+    })();
+
+    if (cacheKey) {
+      inflightGetRequests.set(cacheKey, fetchRequest);
+      fetchRequest.finally(() => {
+        inflightGetRequests.delete(cacheKey);
+      });
     }
 
-    // Handle unauthorized - logout user
-    if (response.status === 401) {
-      authLogout();
-      window.location.href = '/admin/login';
-      throw new Error('Session expired. Please login again.');
-    }
-
-    if (!response.ok) {
-      throw new Error(
-        (data && data.message) ||
-        (typeof data === 'string' && data) ||
-        `API request failed with status ${response.status}`
-      );
-    }
-
-    return data;
+    return cloneCachedData(await fetchRequest);
   } catch (error) {
     if (error instanceof Error) {
       throw error;
@@ -246,7 +322,7 @@ export const newsApi = {
 
 // Student Auth Types
 export interface StudentUser {
-  id: number;
+  id: string;
   username: string;
   full_name: string;
   email?: string | null;
@@ -302,6 +378,7 @@ const studentAuthStorage = {
 
 const studentApiRequest = async <T>(endpoint: string, options: RequestInit = {}): Promise<T> => {
   const token = studentAuthStorage.getToken();
+  const method = (options.method || 'GET').toUpperCase();
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
     ...options.headers,
@@ -311,18 +388,51 @@ const studentApiRequest = async <T>(endpoint: string, options: RequestInit = {})
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-    ...options,
-    headers,
-  });
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.message || 'Request failed');
+  if (method !== 'GET') {
+    invalidateRequestCache();
   }
 
-  return data;
+  const cacheKey = method === 'GET' ? buildGetCacheKey('student', endpoint, token) : null;
+
+  if (cacheKey) {
+    const cached = getCachedResponse<T>(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
+    const inflightRequest = inflightGetRequests.get(cacheKey);
+    if (inflightRequest) {
+      return cloneCachedData(await inflightRequest as T);
+    }
+  }
+
+  const fetchRequest = (async () => {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      ...options,
+      headers,
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Request failed');
+    }
+
+    if (cacheKey) {
+      setCachedResponse(cacheKey, data);
+    }
+
+    return data as T;
+  })();
+
+  if (cacheKey) {
+    inflightGetRequests.set(cacheKey, fetchRequest);
+    fetchRequest.finally(() => {
+      inflightGetRequests.delete(cacheKey);
+    });
+  }
+
+  return cloneCachedData(await fetchRequest);
 };
 
 export const studentAuthApi = {
@@ -816,13 +926,17 @@ export const holidayAssessmentsApi = {
 
 // Teacher Auth Types
 export interface TeacherUser {
-  id: number;
+  id: string;
   full_name: string;
   username: string;
   email: string;
   trade: string;
+  trades?: string[];
+  level?: 'L3' | 'L4' | 'L5';
+  levels?: Array<'L3' | 'L4' | 'L5'>;
   role: 'teacher';
   status: 'pending' | 'approved' | 'rejected';
+  created_at?: string;
 }
 
 export interface TeacherRegisterData {
@@ -830,12 +944,21 @@ export interface TeacherRegisterData {
   username: string;
   email: string;
   password: string;
-  trade: string;
+  trades: string[];
+  levels: Array<'L3' | 'L4' | 'L5'>;
 }
 
 export interface TeacherLoginData {
   email: string;
   password: string;
+}
+
+export interface TeacherProfileUpdateData {
+  full_name?: string;
+  username?: string;
+  email?: string;
+  trades?: string[];
+  levels?: Array<'L3' | 'L4' | 'L5'>;
 }
 
 const TEACHER_TOKEN_KEY = 'teacherAuthToken';
@@ -870,6 +993,7 @@ const teacherAuthStorage = {
 
 const teacherApiRequest = async <T>(endpoint: string, options: RequestInit = {}): Promise<T> => {
   const token = teacherAuthStorage.getToken();
+  const method = (options.method || 'GET').toUpperCase();
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
     ...options.headers,
@@ -879,18 +1003,51 @@ const teacherApiRequest = async <T>(endpoint: string, options: RequestInit = {})
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-    ...options,
-    headers,
-  });
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.message || 'Request failed');
+  if (method !== 'GET') {
+    invalidateRequestCache();
   }
 
-  return data;
+  const cacheKey = method === 'GET' ? buildGetCacheKey('teacher', endpoint, token) : null;
+
+  if (cacheKey) {
+    const cached = getCachedResponse<T>(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
+    const inflightRequest = inflightGetRequests.get(cacheKey);
+    if (inflightRequest) {
+      return cloneCachedData(await inflightRequest as T);
+    }
+  }
+
+  const fetchRequest = (async () => {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      ...options,
+      headers,
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Request failed');
+    }
+
+    if (cacheKey) {
+      setCachedResponse(cacheKey, data);
+    }
+
+    return data as T;
+  })();
+
+  if (cacheKey) {
+    inflightGetRequests.set(cacheKey, fetchRequest);
+    fetchRequest.finally(() => {
+      inflightGetRequests.delete(cacheKey);
+    });
+  }
+
+  return cloneCachedData(await fetchRequest);
 };
 
 export const teacherAuthApi = {
@@ -930,10 +1087,16 @@ export const teacherAuthApi = {
   },
 
   getCurrentTeacher: async () => {
-    return teacherApiRequest<{
+    const response = await teacherApiRequest<{
       success: boolean;
       teacher: TeacherUser;
     }>('/teacher/auth/me');
+
+    if (response.success && response.teacher) {
+      teacherAuthStorage.setUser(response.teacher);
+    }
+
+    return response;
   },
 
   getStoredTeacher: (): TeacherUser | null => {
@@ -942,6 +1105,33 @@ export const teacherAuthApi = {
 
   isAuthenticated: () => {
     return Boolean(teacherAuthStorage.getToken());
+  },
+
+  updateProfile: async (data: TeacherProfileUpdateData) => {
+    const response = await teacherApiRequest<{
+      success: boolean;
+      message: string;
+      teacher: TeacherUser;
+    }>('/teacher/auth/profile', {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+
+    if (response.success && response.teacher) {
+      teacherAuthStorage.setUser(response.teacher);
+    }
+
+    return response;
+  },
+
+  changePassword: async (data: { current_password: string; new_password: string }) => {
+    return teacherApiRequest<{
+      success: boolean;
+      message: string;
+    }>('/teacher/auth/change-password', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
   },
 };
 
@@ -960,11 +1150,11 @@ export const teacherAdminApi = {
 
 // Online Exams Types
 export interface ExamSummary {
-  id: number;
+  id: string;
   title: string;
   description?: string | null;
   total_marks: number;
-  teacher_id?: number | null;
+  teacher_id?: string | null;
   trade: string | null;
   level: 'L1' | 'L2' | 'L3' | 'L4' | 'L5';
   question_count?: number;
@@ -975,7 +1165,7 @@ export interface ExamSummary {
 }
 
 export interface ExamQuestion {
-  id: number;
+  id: string;
   question_text: string;
   type: 'MCQ' | 'TF';
   options: string[];
@@ -984,11 +1174,11 @@ export interface ExamQuestion {
 }
 
 export interface ExamDetail {
-  id: number;
+  id: string;
   title: string;
   description?: string | null;
   total_marks: number;
-  teacher_id?: number | null;
+  teacher_id?: string | null;
   trade: string | null;
   level: 'L1' | 'L2' | 'L3' | 'L4' | 'L5';
   exam_code?: string | null;
@@ -1001,7 +1191,7 @@ export interface ExamDetail {
 
 export interface SubmitExamPayload {
   answers: Array<{
-    questionId: number;
+    questionId: string;
     answer: string;
   }>;
 }
@@ -1035,19 +1225,30 @@ export interface ExamResultResponse {
   success: boolean;
   exam: ExamDetail;
   result: {
-    student_id: number;
-    exam_id: number;
+    student_id: string;
+    exam_id: string;
     score: number;
     percentage?: number;
     grade?: string;
+    rank?: number | null;
     submitted_at: string;
   };
+  ranking?: Array<{
+    rank: number;
+    student_id: string;
+    full_name: string;
+    username: string;
+    score: number;
+    total_marks: number;
+    percentage: number;
+    submitted_at: string;
+  }>;
   answers: ExamResultAnswer[];
 }
 
 export interface TeacherExamResult {
-  id: number;
-  student_id: number;
+  id: string;
+  student_id: string;
   full_name: string;
   username: string;
   score: number;
@@ -1071,38 +1272,41 @@ export interface TeacherExamResultsResponse {
 }
 
 export interface StudentHistoryResult {
-  id: number;
-  examId: number;
+  id: string;
+  examId: string;
   examTitle: string;
   score: number;
   totalMarks: number;
   percentage: number;
   grade: string;
+  rank?: number | null;
+  trade?: string | null;
+  level?: string | null;
   submittedAt: string;
 }
 
 export const examApi = {
-  list: async (params?: { teacherId?: number }): Promise<{ success: boolean; exams: ExamSummary[] }> => {
+  list: async (params?: { teacherId?: string | number }): Promise<{ success: boolean; exams: ExamSummary[] }> => {
     const queryString = params?.teacherId ? `?teacherId=${params.teacherId}` : "";
     return studentApiRequest<{ success: boolean; exams: ExamSummary[] }>(`/exams${queryString}`);
   },
 
   getQuestions: async (
-    examId: number
+    examId: string
   ): Promise<{ success: boolean; exam: ExamDetail; questions: ExamQuestion[] }> => {
     return studentApiRequest<{ success: boolean; exam: ExamDetail; questions: ExamQuestion[] }>(
       `/exams/${examId}/questions`
     );
   },
 
-  submitAnswers: async (examId: number, payload: SubmitExamPayload) => {
+  submitAnswers: async (examId: string, payload: SubmitExamPayload) => {
     return studentApiRequest<ExamSubmissionResponse>(`/exams/${examId}/submit`, {
       method: 'POST',
       body: JSON.stringify(payload),
     });
   },
 
-  getResult: async (studentId: number, examId: number) => {
+  getResult: async (studentId: string, examId: string) => {
     return studentApiRequest<ExamResultResponse>(`/results/${studentId}/${examId}`);
   },
 
@@ -1117,7 +1321,7 @@ export interface ExamQuestionManage extends ExamQuestion {
 }
 
 export const teacherExamApi = {
-  list: async (teacherId?: number): Promise<{ success: boolean; exams: ExamSummary[] }> => {
+  list: async (teacherId?: string | number): Promise<{ success: boolean; exams: ExamSummary[] }> => {
     const params = teacherId ? `?teacherId=${teacherId}` : "";
     return teacherApiRequest<{ success: boolean; exams: ExamSummary[] }>(`/exams${params}`);
   },
@@ -1137,7 +1341,7 @@ export const teacherExamApi = {
   },
 
   update: async (
-    examId: number,
+    examId: string | number,
     payload: {
       title: string;
       description?: string;
@@ -1152,14 +1356,14 @@ export const teacherExamApi = {
     });
   },
 
-  delete: async (examId: number) => {
+  delete: async (examId: string | number) => {
     return teacherApiRequest<{ success: boolean; message: string }>(`/exams/${examId}`, {
       method: "DELETE",
     });
   },
 
   getManageDetail: async (
-    examId: number
+    examId: string | number
   ): Promise<{ success: boolean; exam: ExamDetail; questions: ExamQuestionManage[] }> => {
     return teacherApiRequest<{ success: boolean; exam: ExamDetail; questions: ExamQuestionManage[] }>(
       `/exams/${examId}/manage`
@@ -1167,7 +1371,7 @@ export const teacherExamApi = {
   },
 
   addQuestion: async (
-    examId: number,
+    examId: string | number,
     payload: { question_text: string; type: "MCQ" | "TF"; options?: string[]; correct_answer: string; marks: number }
   ) => {
     return teacherApiRequest(`/exams/${examId}/questions`, {
@@ -1191,7 +1395,7 @@ export const teacherExamApi = {
       method: "DELETE",
     });
   },
-  getExamResults: async (examId: number): Promise<TeacherExamResultsResponse> => {
+  getExamResults: async (examId: string | number): Promise<TeacherExamResultsResponse> => {
     return teacherApiRequest<TeacherExamResultsResponse>(`/exams/${examId}/results`);
   },
 };
@@ -1202,6 +1406,8 @@ export interface StudentStats {
   attendance: number;
   assignments: number;
   grades: number;
+  class_rank?: number | null;
+  class_size?: number;
   total_attendance_days?: number;
   present_attendance_days?: number;
 }
@@ -1312,7 +1518,7 @@ export interface TeacherStats {
 }
 
 export interface TeacherStudent {
-  id: number;
+  id: string;
   full_name: string;
   email: string;
   phone: string;
@@ -1369,7 +1575,7 @@ export const teacherStudentsApi = {
   getAll: async () => {
     return teacherApiRequest<{ success: boolean; students: TeacherStudent[] }>('/teacher/students');
   },
-  getById: async (id: number) => {
+  getById: async (id: string | number) => {
     return teacherApiRequest<{ success: boolean; student: TeacherStudent }>('/teacher/students/' + id);
   }
 };
@@ -1487,5 +1693,3 @@ export const analyticsApi = {
     }>('/analytics/overview');
   }
 };
-
-

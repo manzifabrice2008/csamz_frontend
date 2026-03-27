@@ -109,6 +109,8 @@ export default function AdminTeachers() {
                         <TableHead>Teacher</TableHead>
                         <TableHead>Username</TableHead>
                         <TableHead>Email</TableHead>
+                        <TableHead>Trade</TableHead>
+                        <TableHead>Class</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead className="text-right">Actions</TableHead>
                       </TableRow>
@@ -119,6 +121,8 @@ export default function AdminTeachers() {
                           <TableCell className="font-semibold">{teacher.full_name}</TableCell>
                           <TableCell>{teacher.username}</TableCell>
                           <TableCell>{teacher.email}</TableCell>
+                          <TableCell>{teacher.trades?.join(", ") || teacher.trade || "N/A"}</TableCell>
+                          <TableCell>{teacher.levels?.join(", ") || teacher.level || "N/A"}</TableCell>
                           <TableCell>
                             <Badge className={statusStyles[teacher.status]}>{teacher.status}</Badge>
                           </TableCell>
@@ -169,5 +173,3 @@ export default function AdminTeachers() {
     </AdminLayout>
   );
 }
-
-

@@ -78,7 +78,7 @@ export default function ApplyNow() {
 
   const programs = [
     "Software Development",
-    "Computer Systems and Networks",
+    "Computer System and Architecture",
     "Plumbing Technology",
     "Building Construction",
     "Wood Technology"

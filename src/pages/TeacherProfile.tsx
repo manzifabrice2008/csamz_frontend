@@ -82,6 +82,9 @@ export default function TeacherProfile() {
             .slice(0, 2);
     };
 
+    const tradeSummary = teacher?.trades?.length ? teacher.trades.join(", ") : teacher?.trade;
+    const levelSummary = teacher?.levels?.length ? teacher.levels.join(", ") : teacher?.level;
+
     if (loading) {
         return (
             <TeacherLayout>
@@ -114,7 +117,7 @@ export default function TeacherProfile() {
                                 <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-muted-foreground">
                                     <span className="flex items-center gap-1">
                                         <BookOpen className="w-4 h-4" />
-                                        {teacher?.trade || "Trade"} Instructor
+                                        {tradeSummary || "Trade"} Instructor
                                     </span>
                                     <span>•</span>
                                     <span>ID: {teacher?.id || "N/A"}</span>
@@ -177,10 +180,20 @@ export default function TeacherProfile() {
                                     </div>
                                     <div>
                                         <p className="text-sm font-medium text-muted-foreground">Department / Trade</p>
-                                        <p className="font-medium">{teacher?.trade || "Not specified"}</p>
+                                        <p className="font-medium">{tradeSummary || "Not specified"}</p>
                                     </div>
                                 </div>
 
+                                <div className="flex items-start gap-4 p-3 rounded-lg hover:bg-muted/50 transition-colors">
+                                    <div className="p-2 bg-primary/10 rounded-full text-primary">
+                                        <GraduationCap className="w-5 h-5" />
+                                    </div>
+                                    <div>
+                                        <p className="text-sm font-medium text-muted-foreground">Classes / Levels</p>
+                                        <p className="font-medium">{levelSummary || "Not specified"}</p>
+                                    </div>
+                                </div>
+                                
                                 <div className="flex items-start gap-4 p-3 rounded-lg hover:bg-muted/50 transition-colors">
                                     <div className="p-2 bg-primary/10 rounded-full text-primary">
                                         <CheckSquare className="w-5 h-5" />

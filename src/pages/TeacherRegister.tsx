@@ -5,9 +5,24 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { teacherAuthApi } from "@/services/api";
 import { UserPlus, Mail, Lock, User } from "lucide-react";
+
+const tradeOptions = [
+  "Software Development",
+  "Computer System and Architecture",
+  "Plumbing Technology",
+  "Building Construction",
+  "Wood Technology",
+];
+
+const levelOptions = [
+  { value: "L3", label: "Level 3" },
+  { value: "L4", label: "Level 4" },
+  { value: "L5", label: "Level 5" },
+] as const;
 
 export default function TeacherRegister() {
   const navigate = useNavigate();
@@ -17,10 +32,25 @@ export default function TeacherRegister() {
     full_name: "",
     username: "",
     email: "",
-    trade: "",
+    trades: [] as string[],
+    levels: ["L3"] as Array<"L3" | "L4" | "L5">,
     password: "",
     confirmPassword: "",
   });
+
+  const toggleTrade = (trade: string, checked: boolean) => {
+    setFormData((prev) => ({
+      ...prev,
+      trades: checked ? [...prev.trades, trade] : prev.trades.filter((item) => item !== trade),
+    }));
+  };
+
+  const toggleLevel = (level: "L3" | "L4" | "L5", checked: boolean) => {
+    setFormData((prev) => ({
+      ...prev,
+      levels: checked ? [...prev.levels, level] : prev.levels.filter((item) => item !== level),
+    }));
+  };
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -42,13 +72,32 @@ export default function TeacherRegister() {
       return;
     }
 
+    if (formData.trades.length === 0) {
+      toast({
+        title: "Select at least one trade",
+        description: "Choose the trade or trades you teach.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (formData.levels.length === 0) {
+      toast({
+        title: "Select at least one class",
+        description: "Choose the class levels you teach.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       setLoading(true);
       const response = await teacherAuthApi.register({
         full_name: formData.full_name.trim(),
         username: formData.username.trim(),
         email: formData.email.trim(),
-        trade: formData.trade.trim(),
+        trades: formData.trades,
+        levels: formData.levels,
         password: formData.password,
       });
 
@@ -116,29 +165,50 @@ export default function TeacherRegister() {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="teacher-email">Email</Label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    id="teacher-email"
-                    type="email"
-                    className="pl-9"
-                    value={formData.email}
-                    onChange={(event) => setFormData((prev) => ({ ...prev, email: event.target.value }))}
-                    placeholder="teacher@example.com"
-                    required
-                  />
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="teacher-email">Email</Label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      id="teacher-email"
+                      type="email"
+                      className="pl-9"
+                      value={formData.email}
+                      onChange={(event) => setFormData((prev) => ({ ...prev, email: event.target.value }))}
+                      placeholder="teacher@example.com"
+                      required
+                    />
+                  </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="teacher-trade">Trade / subject you teach</Label>
-                  <Input
-                    id="teacher-trade"
-                    value={formData.trade}
-                    onChange={(event) => setFormData((prev) => ({ ...prev, trade: event.target.value }))}
-                    placeholder="e.g. Software Development"
-                    required
-                  />
+                  <Label>Trades / subjects you teach</Label>
+                  <div className="space-y-3 rounded-md border p-4">
+                    {tradeOptions.map((trade) => (
+                      <label key={trade} className="flex items-center gap-3 text-sm">
+                        <Checkbox
+                          checked={formData.trades.includes(trade)}
+                          onCheckedChange={(checked) => toggleTrade(trade, checked === true)}
+                        />
+                        <span>{trade}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Classes you teach</Label>
+                <div className="grid gap-3 rounded-md border p-4 md:grid-cols-3">
+                  {levelOptions.map((level) => (
+                    <label key={level.value} className="flex items-center gap-3 text-sm">
+                      <Checkbox
+                        checked={formData.levels.includes(level.value)}
+                        onCheckedChange={(checked) => toggleLevel(level.value, checked === true)}
+                      />
+                      <span>{level.label}</span>
+                    </label>
+                  ))}
                 </div>
               </div>
 
@@ -200,5 +270,3 @@ export default function TeacherRegister() {
     </Layout>
   );
 }
-
-

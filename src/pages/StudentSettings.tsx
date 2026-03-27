@@ -24,7 +24,7 @@ import { Loader2, Save, Lock, Mail, Phone, User } from "lucide-react";
 
 const tradeOptions = [
   "Software Development",
-  "Computer Systems and Networks",
+  "Computer System and Architecture",
   "Plumbing Technology",
   "Building Construction",
   "Wood Technology",

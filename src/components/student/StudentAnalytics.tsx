@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { studentAnalyticsApi, StudentStats, StudentPerformancePoint } from "@/services/api";
-import { Loader2, TrendingUp, Award, Calendar, BookOpen } from "lucide-react";
+import { Loader2, TrendingUp, Award, Calendar, BookOpen, Trophy } from "lucide-react";
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 export default function StudentAnalytics() {
@@ -38,7 +38,7 @@ export default function StudentAnalytics() {
     return (
         <div className="space-y-6 animate-fadeIn">
             {/* Key Metrics */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
                 <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg hover:shadow-xl transition-all duration-300">
                     <CardContent className="p-6">
                         <div className="flex justify-between items-start">
@@ -107,6 +107,36 @@ export default function StudentAnalytics() {
                             <div
                                 className="h-full bg-white/90 rounded-full transition-all duration-1000"
                                 style={{ width: `${stats?.assignments}%` }}
+                            />
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <Card className="bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-lg hover:shadow-xl transition-all duration-300">
+                    <CardContent className="p-6">
+                        <div className="flex justify-between items-start">
+                            <div>
+                                <p className="text-amber-100 font-medium mb-1">Class Position</p>
+                                <h3 className="text-4xl font-bold">
+                                    {stats?.class_rank ? `#${stats.class_rank}` : "-"}
+                                </h3>
+                                <p className="text-sm text-amber-100 mt-2 flex items-center gap-1">
+                                    <Trophy className="w-4 h-4" />
+                                    {stats?.class_size ? `Out of ${stats.class_size} students` : "No class ranking yet"}
+                                </p>
+                            </div>
+                            <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
+                                <Trophy className="w-6 h-6 text-white" />
+                            </div>
+                        </div>
+                        <div className="mt-4 h-2 bg-black/20 rounded-full overflow-hidden">
+                            <div
+                                className="h-full bg-white/90 rounded-full transition-all duration-1000"
+                                style={{
+                                    width: stats?.class_rank && stats?.class_size
+                                        ? `${Math.max(10, Math.round(((stats.class_size - stats.class_rank + 1) / stats.class_size) * 100))}%`
+                                        : "8%",
+                                }}
                             />
                         </div>
                     </CardContent>

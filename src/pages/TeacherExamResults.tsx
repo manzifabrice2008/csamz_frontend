@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import TeacherLayout from "@/components/TeacherLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { teacherExamApi, TeacherExamResult } from "@/services/api";
-import { ArrowLeft, Loader2, Trophy, Download } from "lucide-react";
+import { ArrowLeft, Loader2, Download, Medal, TrendingUp } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 
 export default function TeacherExamResults() {
@@ -21,7 +21,7 @@ export default function TeacherExamResults() {
         const fetchResults = async () => {
             if (!examId) return;
             try {
-                const response = await teacherExamApi.getExamResults(Number(examId));
+                const response = await teacherExamApi.getExamResults(examId);
                 if (response.success) {
                     setResults(response.results);
                     setExamTitle(response.exam_title);
@@ -41,6 +41,14 @@ export default function TeacherExamResults() {
         fetchResults();
     }, [examId, toast]);
 
+    const rankedResults = useMemo(() => {
+        return [...results].sort((a, b) => {
+            if (b.percentage !== a.percentage) return b.percentage - a.percentage;
+            if (b.score !== a.score) return b.score - a.score;
+            return new Date(a.submitted_at).getTime() - new Date(b.submitted_at).getTime();
+        });
+    }, [results]);
+
     const getGradeColor = (grade: string) => {
         switch (grade) {
             case 'A': return "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400";
@@ -48,6 +56,47 @@ export default function TeacherExamResults() {
             case 'C': return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400";
             default: return "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400";
         }
+    };
+
+    const downloadCsv = () => {
+        if (rankedResults.length === 0) {
+            toast({
+                title: "No results to export",
+                description: "Students need to take the exam before you can download the CSV.",
+                variant: "destructive",
+            });
+            return;
+        }
+
+        const rows = [
+            ["Rank", "Student Name", "Username", "Score", "Total Marks", "Percentage", "Grade", "Submitted At"],
+            ...rankedResults.map((result, index) => [
+                String(index + 1),
+                result.full_name || "",
+                result.username || "",
+                String(result.score),
+                String(result.total_marks),
+                `${result.percentage}%`,
+                result.grade || "",
+                new Date(result.submitted_at).toLocaleString(),
+            ]),
+        ];
+
+        const csvContent = rows
+            .map((row) =>
+                row
+                    .map((value) => `"${String(value).replace(/"/g, '""')}"`)
+                    .join(",")
+            )
+            .join("\n");
+
+        const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `${examTitle || "exam-results"}.csv`;
+        link.click();
+        window.URL.revokeObjectURL(url);
     };
 
     return (
@@ -127,6 +176,26 @@ export default function TeacherExamResults() {
                     </div>
                 )}
 
+                {!loading && rankedResults.length > 0 && (
+                    <Card className="border-school-primary/20 bg-gradient-to-r from-school-primary/5 via-background to-school-accent/10">
+                        <CardContent className="flex flex-col gap-4 p-6 md:flex-row md:items-center md:justify-between">
+                            <div className="space-y-1">
+                                <div className="flex items-center gap-2 text-school-primary">
+                                    <TrendingUp className="h-5 w-5" />
+                                    <span className="font-semibold">Result Summary</span>
+                                </div>
+                                <p className="text-sm text-muted-foreground">
+                                    Students are ranked from highest to lowest score. You can download the full result list as CSV.
+                                </p>
+                            </div>
+                            <Button onClick={downloadCsv} className="md:min-w-48">
+                                <Download className="mr-2 h-4 w-4" />
+                                Download CSV
+                            </Button>
+                        </CardContent>
+                    </Card>
+                )}
+
                 <Card className="shadow-md">
                     <CardHeader className="flex flex-row items-center justify-between">
                         <div>
@@ -135,7 +204,12 @@ export default function TeacherExamResults() {
                                 {results.length} result{results.length !== 1 ? "s" : ""} found
                             </CardDescription>
                         </div>
-                        {/* Future: Export CSV button could go here */}
+                        {rankedResults.length > 0 ? (
+                            <Button variant="outline" size="sm" onClick={downloadCsv}>
+                                <Download className="mr-2 h-4 w-4" />
+                                Export CSV
+                            </Button>
+                        ) : null}
                     </CardHeader>
                     <CardContent>
                         {loading ? (
@@ -151,6 +225,7 @@ export default function TeacherExamResults() {
                                 <Table>
                                     <TableHeader>
                                         <TableRow>
+                                            <TableHead>Rank</TableHead>
                                             <TableHead>Student Name</TableHead>
                                             <TableHead>Username</TableHead>
                                             <TableHead>Submitted At</TableHead>
@@ -160,8 +235,14 @@ export default function TeacherExamResults() {
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
-                                        {results.map((result) => (
+                                        {rankedResults.map((result, index) => (
                                             <TableRow key={result.id}>
+                                                <TableCell>
+                                                    <div className="flex items-center gap-2 font-semibold">
+                                                        {index === 0 ? <Medal className="h-4 w-4 text-yellow-500" /> : null}
+                                                        #{index + 1}
+                                                    </div>
+                                                </TableCell>
                                                 <TableCell className="font-medium">{result.full_name}</TableCell>
                                                 <TableCell className="text-muted-foreground">{result.username}</TableCell>
                                                 <TableCell>{new Date(result.submitted_at).toLocaleString()}</TableCell>

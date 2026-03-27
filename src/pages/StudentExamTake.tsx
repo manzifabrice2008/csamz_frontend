@@ -16,7 +16,7 @@ export default function StudentExamTake() {
   const [questions, setQuestions] = useState<ExamQuestion[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [answers, setAnswers] = useState<Record<number, string>>({});
+  const [answers, setAnswers] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
 
   // New Step-by-step and Timer state
@@ -33,7 +33,7 @@ export default function StudentExamTake() {
       }
 
       try {
-        const response = await examApi.getQuestions(Number(examId));
+        const response = await examApi.getQuestions(examId);
         setExam(response.exam);
         setQuestions(response.questions);
       } catch (err: any) {
@@ -49,7 +49,7 @@ export default function StudentExamTake() {
   const currentQuestion = useMemo(() => questions[currentIndex], [questions, currentIndex]);
 
   // Final Submit function (reusable)
-  const performSubmit = useCallback(async (finalAnswers: Record<number, string>) => {
+  const performSubmit = useCallback(async (finalAnswers: Record<string, string>) => {
     if (!examId) return;
 
     setSubmitting(true);
@@ -57,13 +57,13 @@ export default function StudentExamTake() {
 
     const payload: SubmitExamPayload = {
       answers: Object.entries(finalAnswers).map(([questionId, answer]) => ({
-        questionId: Number(questionId),
+        questionId,
         answer,
       })),
     };
 
     try {
-      const response = await examApi.submitAnswers(Number(examId), payload);
+      const response = await examApi.submitAnswers(examId, payload);
       navigate(`/student/exams/${examId}/result`, {
         state: {
           fromSubmission: true,
@@ -117,7 +117,7 @@ export default function StudentExamTake() {
     }
   };
 
-  const handleOptionChange = (questionId: number, value: string) => {
+  const handleOptionChange = (questionId: string, value: string) => {
     setAnswers((prev) => ({ ...prev, [questionId]: value }));
   };
 

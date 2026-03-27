@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import TeacherLayout from "@/components/TeacherLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,6 +8,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Loader2,
   PlusCircle,
@@ -22,11 +29,12 @@ import { teacherExamApi, ExamSummary, ExamDetail, ExamQuestionManage, teacherAut
 
 export default function TeacherExams() {
   const { toast } = useToast();
-  const [teacher, setTeacher] = useState<{ trade: string } | null>(null);
+  const [teacher, setTeacher] = useState<{ trade: string; trades: string[]; level?: string; levels: string[] } | null>(null);
 
   // Exams List State
   const [exams, setExams] = useState<ExamSummary[]>([]);
   const [loadingExams, setLoadingExams] = useState(true);
+  const [examSearch, setExamSearch] = useState("");
 
   // Exam Creation State
   const [creatingExam, setCreatingExam] = useState(false);
@@ -64,8 +72,14 @@ export default function TeacherExams() {
       try {
         const teacherData = teacherAuthApi.getStoredTeacher();
         if (teacherData) {
-          setTeacher({ trade: teacherData.trade });
-          setExamForm(prev => ({ ...prev, trade: teacherData.trade }));
+          const trades = teacherData.trades?.length ? teacherData.trades : (teacherData.trade ? [teacherData.trade] : []);
+          const levels = teacherData.levels?.length ? teacherData.levels : (teacherData.level ? [teacherData.level] : ["L3"]);
+          setTeacher({ trade: teacherData.trade, trades, level: teacherData.level, levels });
+          setExamForm(prev => ({
+            ...prev,
+            trade: trades[0] || "",
+            level: ((levels[0] as "L3" | "L4" | "L5") || "L3"),
+          }));
         }
 
         const response = await teacherExamApi.list();
@@ -86,6 +100,29 @@ export default function TeacherExams() {
     fetchInitialData();
   }, [toast]);
 
+  useEffect(() => {
+    if (!selectedExamId && exams.length > 0) {
+      selectExam(exams[0].id);
+    }
+  }, [exams, selectedExamId]);
+
+  const filteredExams = useMemo(() => {
+    const query = examSearch.trim().toLowerCase();
+    if (!query) return exams;
+
+    return exams.filter((exam) =>
+      exam.title.toLowerCase().includes(query) ||
+      (exam.exam_code || "").toLowerCase().includes(query) ||
+      (exam.trade || "").toLowerCase().includes(query) ||
+      (exam.level || "").toLowerCase().includes(query)
+    );
+  }, [examSearch, exams]);
+
+  const totalQuestions = useMemo(
+    () => exams.reduce((sum, exam) => sum + (exam.question_count || 0), 0),
+    [exams]
+  );
+
   // Handle Exam Selection
   const selectExam = async (examId: number) => {
     try {
@@ -100,10 +137,10 @@ export default function TeacherExams() {
         setExamDetail(response.exam);
         setQuestions(response.questions);
       }
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "Failed to load exam details",
+        description: error?.message || "Failed to load exam details",
         variant: "destructive",
       });
     } finally {
@@ -141,7 +178,7 @@ export default function TeacherExams() {
             total_marks: 100,
             exam_code: "",
             level: "L3",
-            trade: prev.trade,
+            trade: teacher?.trades?.[0] || prev.trade,
           }));
         }
       } else {
@@ -164,7 +201,7 @@ export default function TeacherExams() {
             total_marks: 100,
             exam_code: "",
             level: "L3",
-            trade: prev.trade, // Keep trade as it likely won't change often
+            trade: teacher?.trades?.[0] || prev.trade,
           }));
           // Select the new exam
           if (response.exam.id) {
@@ -203,7 +240,7 @@ export default function TeacherExams() {
       total_marks: 100,
       exam_code: "",
       level: "L3",
-      trade: teacher?.trade || prev.trade,
+      trade: teacher?.trades?.[0] || teacher?.trade || prev.trade,
     }));
   };
 
@@ -367,9 +404,30 @@ export default function TeacherExams() {
         <div className="space-y-2">
           <h1 className="text-3xl font-bold tracking-tight">Teacher Exams</h1>
           <p className="text-muted-foreground">Prepare and manage online assessments</p>
-          {teacher?.trade && (
-            <p className="text-sm text-muted-foreground">Linked trade: {teacher.trade}. Students in this trade will see your exams.</p>
-          )}
+          {teacher?.trades?.length ? (
+            <p className="text-sm text-muted-foreground">Assigned trades: {teacher.trades.join(", ")}. You can create exams only for these trades and classes.</p>
+          ) : null}
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-3">
+          <Card className="shadow-sm">
+            <CardContent className="pt-6">
+              <p className="text-sm text-muted-foreground">My exams</p>
+              <p className="mt-2 text-3xl font-bold">{exams.length}</p>
+            </CardContent>
+          </Card>
+          <Card className="shadow-sm">
+            <CardContent className="pt-6">
+              <p className="text-sm text-muted-foreground">Questions created</p>
+              <p className="mt-2 text-3xl font-bold">{totalQuestions}</p>
+            </CardContent>
+          </Card>
+          <Card className="shadow-sm">
+            <CardContent className="pt-6">
+              <p className="text-sm text-muted-foreground">Selected exam</p>
+              <p className="mt-2 text-lg font-semibold truncate">{examDetail?.title || "None selected"}</p>
+            </CardContent>
+          </Card>
         </div>
 
 
@@ -432,29 +490,42 @@ export default function TeacherExams() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="text-sm font-medium block mb-1">Level</label>
-                    <select
+                    <Select
                       value={examForm.level}
-                      onChange={(event) => setExamForm(prev => ({
+                      onValueChange={(value: 'L3' | 'L4' | 'L5') => setExamForm(prev => ({
                         ...prev,
-                        level: event.target.value as 'L3' | 'L4' | 'L5'
+                        level: value
                       }))}
-                      className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                     >
-                      <option value="L3">Level 3</option>
-                      <option value="L4">Level 4</option>
-                      <option value="L5">Level 5</option>
-                    </select>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select level" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {(teacher?.levels?.length ? teacher.levels : ["L3", "L4", "L5"]).map((level) => (
+                          <SelectItem key={level} value={level}>
+                            {level.replace("L", "Level ")}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div>
                     <label className="text-sm font-medium block mb-1">Trade</label>
-                    <Input
+                    <Select
                       value={examForm.trade}
-                      onChange={(event) => setExamForm(prev => ({ ...prev, trade: event.target.value }))}
-                      placeholder="Enter trade name"
-                      required
-                      disabled={!!teacher?.trade}
-                      className={teacher?.trade ? "bg-muted text-muted-foreground" : ""}
-                    />
+                      onValueChange={(value) => setExamForm(prev => ({ ...prev, trade: value }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select trade" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {(teacher?.trades?.length ? teacher.trades : [examForm.trade].filter(Boolean)).map((trade) => (
+                          <SelectItem key={trade} value={trade}>
+                            {trade}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
                 <Button type="submit" className="w-full" disabled={creatingExam}>
@@ -475,17 +546,25 @@ export default function TeacherExams() {
               <Separator />
 
               <div className="space-y-3">
-                <h3 className="text-lg font-semibold">Your exams</h3>
+                <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                  <h3 className="text-lg font-semibold">My exams</h3>
+                  <Input
+                    value={examSearch}
+                    onChange={(event) => setExamSearch(event.target.value)}
+                    placeholder="Search exams by title, code, trade..."
+                    className="md:max-w-xs"
+                  />
+                </div>
                 {loadingExams ? (
                   <div className="flex items-center justify-center py-8 text-muted-foreground">
                     <Loader2 className="w-5 h-5 animate-spin mr-2" />
                     Loading exams...
                   </div>
-                ) : exams.length === 0 ? (
+                ) : filteredExams.length === 0 ? (
                   <p className="text-sm text-muted-foreground">No exams yet. Create one to get started.</p>
                 ) : (
                   <div className="space-y-3 max-h-[420px] overflow-auto pr-1">
-                    {exams.map((exam) => (
+                    {filteredExams.map((exam) => (
                       <button
                         key={exam.id}
                         onClick={() => selectExam(exam.id)}
@@ -775,4 +854,3 @@ export default function TeacherExams() {
     </TeacherLayout>
   );
 }
-

@@ -48,7 +48,7 @@ export default function ComputerSystems() {
               <p className="text-muted-foreground leading-relaxed mb-4">
                 The Computer Systems program focuses on computer hardware, networking, and
                 system administration. Students gain practical skills in installing, maintaining,
-                and troubleshooting computer systems and networks.
+                and troubleshooting computer systems and architecture environments.
               </p>
               <p className="text-muted-foreground leading-relaxed">
                 Duration: 3 years | Level: A2
@@ -87,7 +87,7 @@ export default function ComputerSystems() {
               />
               <div className="absolute inset-0 bg-gradient-to-t from-school-primary/80 to-transparent"></div>
               <div className="absolute bottom-0 left-0 right-0 p-8 text-white">
-                <h3 className="text-3xl font-bold mb-2">Computer Systems & Networking</h3>
+                <h3 className="text-3xl font-bold mb-2">Computer System & Architecture</h3>
                 <p className="text-lg">Mastering hardware and network infrastructure</p>
               </div>
             </div>

@@ -18,7 +18,7 @@ import {
   Award,
   Bell
 } from "lucide-react";
-import { studentAuthApi, studentNotificationsApi } from "@/services/api";
+import { examApi, studentAuthApi, studentNotificationsApi } from "@/services/api";
 
 interface StudentLayoutProps {
   children: React.ReactNode;
@@ -27,6 +27,10 @@ interface StudentLayoutProps {
 export default function StudentLayout({ children }: StudentLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [quickStats, setQuickStats] = useState({
+    averageScore: 0,
+    examsTaken: 0,
+  });
   const location = useLocation();
   const navigate = useNavigate();
   const student = studentAuthApi.getStoredStudent();
@@ -44,6 +48,27 @@ export default function StudentLayout({ children }: StudentLayoutProps) {
     // Poll every minute
     const interval = setInterval(fetchNotifications, 60000);
     return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    const fetchQuickStats = async () => {
+      try {
+        const response = await examApi.getStudentHistory();
+        const results = response.results || [];
+        const examsTaken = results.length;
+        const totalPercentage = results.reduce((sum, result) => sum + result.percentage, 0);
+        const averageScore = examsTaken > 0 ? Math.round(totalPercentage / examsTaken) : 0;
+
+        setQuickStats({
+          averageScore,
+          examsTaken,
+        });
+      } catch (error) {
+        console.error("Failed to fetch quick stats", error);
+      }
+    };
+
+    fetchQuickStats();
   }, []);
 
   const handleLogout = () => {
@@ -196,11 +221,11 @@ export default function StudentLayout({ children }: StudentLayoutProps) {
             </div>
             <div className="grid grid-cols-2 gap-2 text-xs">
               <div className="text-center p-2 bg-background rounded">
-                <div className="font-medium">85%</div>
+                <div className="font-medium">{quickStats.averageScore}%</div>
                 <div className="text-muted-foreground">Avg Score</div>
               </div>
               <div className="text-center p-2 bg-background rounded">
-                <div className="font-medium">12</div>
+                <div className="font-medium">{quickStats.examsTaken}</div>
                 <div className="text-muted-foreground">Exams Taken</div>
               </div>
             </div>

@@ -463,7 +463,7 @@ INSERT INTO `students` (`id`, `username`, `email`, `phone_number`, `password`, `
 (1, 'test', 'test@test.com', NULL, '$2a$10$eOuFd83Q29VN8vZXUxg8FOwTD5ev9YHm.WbjeCzicvVCjXf5kfY0e', 'test', 'Software Development', 'L3', NULL, 'active', '2025-10-20 14:36:38', '2025-11-17 14:40:40'),
 (2, 'manzi.besigye', 'manzibesigye@gmail.com', '0795825296', '$2a$10$6wEWlL1eaNJILp7L2O.eoeEpX3WPwtuDm4PUpG/fqzzqih6d7u.LC', 'manzi besigye fabrice', 'Software Development', 'L3', NULL, 'active', '2025-11-17 13:36:46', '2025-11-17 14:40:40'),
 (3, 'test3', 'test3@gmail.com', '0795825296', '$2a$10$z2.81MLTwPauKxwgUAi3AObOoDUPdGtIhLKIBkxsWFLUTGA.ZSJYq', 'test3', 'Software Development', 'L1', NULL, 'active', '2025-11-17 14:50:45', '2025-11-17 14:50:45'),
-(4, 'test0', 'manzi@gmail.com', '07855555', '$2a$10$e4DbV4O6bybXynEeRkbw/eJloAyPBG..9LsC1r2Yl1.GxyZyEO/ru', 'manzi fabrice', 'Computer Systems and Networks', 'L1', NULL, 'active', '2025-12-18 12:33:49', '2025-12-18 12:33:49'),
+(4, 'test0', 'manzi@gmail.com', '07855555', '$2a$10$e4DbV4O6bybXynEeRkbw/eJloAyPBG..9LsC1r2Yl1.GxyZyEO/ru', 'manzi fabrice', 'Computer System and Architecture', 'L1', NULL, 'active', '2025-12-18 12:33:49', '2025-12-18 12:33:49'),
 (5, 'testbuc', 'testbuc@gmail.com', '0787777777', '$2a$10$m4rALNxBDyITnB3jS612y.sGqXptJawDUZj.aTz4SA4GLeIbRvUIm', 'test buc', 'Building Construction', 'L1', NULL, 'active', '2025-12-29 07:36:23', '2025-12-29 07:36:23');
 
 -- --------------------------------------------------------

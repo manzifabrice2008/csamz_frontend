@@ -21,7 +21,7 @@ export default function TeacherStudentDetail() {
         const fetchStudent = async () => {
             if (!id) return;
             try {
-                const response = await teacherStudentsApi.getById(Number(id));
+                const response = await teacherStudentsApi.getById(id);
                 if (response.success) {
                     setStudent(response.student);
                 }
@@ -83,7 +83,10 @@ export default function TeacherStudentDetail() {
                             </div>
                             <CardTitle className="text-2xl">{student.full_name}</CardTitle>
                             <CardDescription className="flex items-center justify-center gap-2 mt-2">
-                                <Badge variant={student.status === "active" ? "default" : "secondary"}>
+                                <Badge
+                                    variant={student.status === "active" ? "default" : "secondary"}
+                                    className={student.status === "active" ? "bg-green-500 hover:bg-green-600" : "bg-amber-500 hover:bg-amber-600 text-white"}
+                                >
                                     {student.status}
                                 </Badge>
                                 <span>ID: {student.id}</span>
@@ -131,7 +134,23 @@ export default function TeacherStudentDetail() {
                                         <CardTitle>Performance Overview</CardTitle>
                                         <CardDescription>Recent activity and stats.</CardDescription>
                                     </CardHeader>
-                                    <CardContent>
+                                    <CardContent className="space-y-4">
+                                        <div className="rounded-lg border p-4">
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-sm font-medium text-muted-foreground">Student Status</span>
+                                                <Badge
+                                                    variant={student.status === "active" ? "default" : "secondary"}
+                                                    className={student.status === "active" ? "bg-green-500 hover:bg-green-600" : "bg-amber-500 hover:bg-amber-600 text-white"}
+                                                >
+                                                    {student.status}
+                                                </Badge>
+                                            </div>
+                                            <p className="mt-2 text-sm text-muted-foreground">
+                                                {student.status === "active"
+                                                    ? "This student account is active and can access the student portal."
+                                                    : "This student account is currently inactive and may not be able to access the portal."}
+                                            </p>
+                                        </div>
                                         <p className="text-muted-foreground text-sm">Performance charts and activity feed will appear here.</p>
                                     </CardContent>
                                 </Card>
