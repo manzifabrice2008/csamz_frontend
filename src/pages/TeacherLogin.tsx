@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import Layout from "@/components/Layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,7 @@ import { LogIn, Mail, Lock } from "lucide-react";
 
 export default function TeacherLogin() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -49,7 +50,9 @@ export default function TeacherLogin() {
           title: "Welcome, teacher!",
           description: `Logged in as ${response.teacher.full_name}`,
         });
-        navigate("/teacher/dashboard", { replace: true });
+
+        const redirectTo = searchParams.get("redirect");
+        navigate(redirectTo || "/teacher/dashboard", { replace: true });
       }
     } catch (error: any) {
       toast({
@@ -149,5 +152,4 @@ export default function TeacherLogin() {
     </Layout>
   );
 }
-
 

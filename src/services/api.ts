@@ -111,8 +111,8 @@ async function apiRequest<T>(
         }
       }
 
-      // Handle unauthorized - logout user
-      if (response.status === 401) {
+      // Only force admin logout/redirect when an authenticated admin request expires.
+      if (response.status === 401 && token) {
         authLogout();
         window.location.href = '/admin/login';
         throw new Error('Session expired. Please login again.');
