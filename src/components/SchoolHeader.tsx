@@ -92,6 +92,58 @@ const SchoolHeader = () => {
     }
   };
 
+  const accountMenu = (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-school-primary/40 bg-white text-sm font-semibold text-school-primary shadow-sm transition hover:bg-school-primary/10 dark:border-school-accent/60 dark:bg-transparent dark:text-school-accent"
+          aria-label="Account menu"
+        >
+          {userInitial || <User className="h-5 w-5" />}
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-56">
+        <DropdownMenuLabel>
+          {activeUser ? (
+            <div className="space-y-1">
+              <div className="font-semibold">{activeUser.full_name || activeUser.username}</div>
+              <p className="text-xs text-muted-foreground">
+                {teacher ? t("teacher") ?? "Teacher" : t("student") ?? "Student"}
+              </p>
+            </div>
+          ) : (
+            t("account") ?? "Account"
+          )}
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        {activeUser && (
+          <DropdownMenuItem asChild>
+            <Link to={teacher ? "/teacher/dashboard" : "/student/dashboard"}>
+              {t("dashboard") ?? "Dashboard"}
+            </Link>
+          </DropdownMenuItem>
+        )}
+        <DropdownMenuItem onClick={goToSettings} disabled={!activeUser}>
+          {t("settings") ?? "Settings"}
+        </DropdownMenuItem>
+        {activeUser ? (
+          <DropdownMenuItem onClick={handleUserLogout} className="text-destructive">
+            {t("logout") ?? "Logout"}
+          </DropdownMenuItem>
+        ) : (
+          <>
+            <DropdownMenuItem onClick={() => (window.location.href = "/student/login")}>
+              {t("studentLogin") ?? "Student Login"}
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => (window.location.href = "/teacher/login")}>
+              {t("teacherLogin") ?? "Teacher Login"}
+            </DropdownMenuItem>
+          </>
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+
   return (
     <>
       <header className="bg-background/95 backdrop-blur-md shadow-sm border-b sticky top-0 z-50 animate-fadeInDown">
@@ -192,55 +244,7 @@ const SchoolHeader = () => {
               <LanguageSelector />
               <ThemeToggle />
               <div className="flex items-center gap-2">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button
-                      className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-school-primary/40 bg-white text-sm font-semibold text-school-primary shadow-sm transition hover:bg-school-primary/10 dark:border-school-accent/60 dark:bg-transparent dark:text-school-accent"
-                      aria-label="Account menu"
-                    >
-                      {userInitial || <User className="h-5 w-5" />}
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56">
-                    <DropdownMenuLabel>
-                      {activeUser ? (
-                        <div className="space-y-1">
-                          <div className="font-semibold">{activeUser.full_name || activeUser.username}</div>
-                          <p className="text-xs text-muted-foreground">
-                            {teacher ? t("teacher") ?? "Teacher" : t("student") ?? "Student"}
-                          </p>
-                        </div>
-                      ) : (
-                        t("account") ?? "Account"
-                      )}
-                    </DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    {activeUser && (
-                      <DropdownMenuItem asChild>
-                        <Link to={teacher ? "/teacher/dashboard" : "/student/dashboard"}>
-                          {t("dashboard") ?? "Dashboard"}
-                        </Link>
-                      </DropdownMenuItem>
-                    )}
-                    <DropdownMenuItem onClick={goToSettings} disabled={!activeUser}>
-                      {t("settings") ?? "Settings"}
-                    </DropdownMenuItem>
-                    {activeUser ? (
-                      <DropdownMenuItem onClick={handleUserLogout} className="text-destructive">
-                        {t("logout") ?? "Logout"}
-                      </DropdownMenuItem>
-                    ) : (
-                      <>
-                        <DropdownMenuItem onClick={() => (window.location.href = "/student/login")}>
-                          {t("studentLogin") ?? "Student Login"}
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => (window.location.href = "/teacher/login")}>
-                          {t("teacherLogin") ?? "Teacher Login"}
-                        </DropdownMenuItem>
-                      </>
-                    )}
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                {accountMenu}
                 <Button
                   variant="default"
                   className="bg-school-primary dark:bg-school-accent hover:bg-school-primary/90 dark:hover:bg-school-accent/90 transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-2xl"
@@ -252,6 +256,7 @@ const SchoolHeader = () => {
             </nav>
 
             <div className="lg:hidden flex items-center gap-2">
+              {accountMenu}
               <LanguageSelector />
               <ThemeToggle />
             </div>
