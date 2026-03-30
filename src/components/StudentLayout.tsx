@@ -45,8 +45,7 @@ export default function StudentLayout({ children }: StudentLayoutProps) {
       }
     };
     fetchNotifications();
-    // Poll every minute
-    const interval = setInterval(fetchNotifications, 60000);
+    const interval = setInterval(fetchNotifications, 15000);
     return () => clearInterval(interval);
   }, []);
 

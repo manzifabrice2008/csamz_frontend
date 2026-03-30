@@ -94,6 +94,7 @@ export default function StudentExamResult() {
   const ranking = resultData.ranking || [];
   const totalMarks = exam.total_marks || answers.reduce((sum, row) => sum + row.marks, 0);
   const scorePercentage = totalMarks > 0 ? Math.round((result.score / totalMarks) * 100) : 0;
+  const gradesPublished = Boolean(exam.grades_published);
 
   return (
     <StudentLayout>
@@ -128,7 +129,11 @@ export default function StudentExamResult() {
                 <div className="rounded-xl border border-school-primary/20 bg-background/70 p-4 text-center">
                   <p className="text-sm text-muted-foreground">Your Place</p>
                   <p className="mt-2 text-3xl font-bold text-school-primary">{result.rank ? `#${result.rank}` : "-"}</p>
-                  <p className="mt-1 text-xs text-muted-foreground">Position among all students who attended this exam</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {gradesPublished
+                      ? "Position among all students who attended this exam"
+                      : "Ranking will appear after your teacher publishes the grades"}
+                  </p>
                 </div>
                 <div className="rounded-xl border border-school-primary/20 bg-background/70 p-4 text-center">
                   <p className="text-sm text-muted-foreground">Grade</p>
@@ -137,8 +142,10 @@ export default function StudentExamResult() {
                 </div>
                 <div className="rounded-xl border border-school-primary/20 bg-background/70 p-4 text-center">
                   <p className="text-sm text-muted-foreground">Students Attended</p>
-                  <p className="mt-2 text-3xl font-bold text-school-primary">{ranking.length}</p>
-                  <p className="mt-1 text-xs text-muted-foreground">All ranked students in this exam</p>
+                  <p className="mt-2 text-3xl font-bold text-school-primary">{gradesPublished ? ranking.length : "-"}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {gradesPublished ? "All ranked students in this exam" : "Class details stay hidden until publication"}
+                  </p>
                 </div>
               </div>
 
@@ -157,12 +164,16 @@ export default function StudentExamResult() {
                 Exam Ranking
               </CardTitle>
               <CardDescription>
-                See your place and the rank of all students who attended this exam.
+                {gradesPublished
+                  ? "See your place and the rank of all students who attended this exam."
+                  : "This ranking will unlock once your teacher publishes the grades."}
               </CardDescription>
             </CardHeader>
             <CardContent>
               {ranking.length === 0 ? (
-                <div className="py-8 text-center text-muted-foreground">No ranking data available for this exam yet.</div>
+                <div className="py-8 text-center text-muted-foreground">
+                  {gradesPublished ? "No ranking data available for this exam yet." : "Grades have not been published for class viewing yet."}
+                </div>
               ) : (
                 <div className="rounded-md border">
                   <Table>

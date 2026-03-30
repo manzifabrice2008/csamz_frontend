@@ -1,1 +1,0 @@
-import{b as i,u as c,r as s,s as l,j as o}from"./index-B5kmZFRt.js";function g({children:a}){const e=i(),t=c(),[n,r]=s.useState(null);return s.useEffect(()=>{if(!l.isAuthenticated()){const u=encodeURIComponent(t.pathname+t.search);e(`/student/login?redirect=${u}`);return}r(!0)},[t.pathname,t.search,e]),n===null||!n?null:o.jsx(o.Fragment,{children:a})}export{g as default};

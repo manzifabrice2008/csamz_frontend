@@ -1216,6 +1216,8 @@ export interface ExamDetail {
   question_count?: number;
   already_taken?: boolean;
   status?: 'draft' | 'published';
+  grades_published?: boolean;
+  grades_published_at?: string | null;
 }
 
 export interface SubmitExamPayload {
@@ -1290,6 +1292,8 @@ export interface TeacherExamResult {
 export interface TeacherExamResultsResponse {
   success: boolean;
   exam_title: string;
+  grades_published: boolean;
+  grades_published_at?: string | null;
   results: TeacherExamResult[];
   stats?: {
     total_submissions: number;
@@ -1311,6 +1315,7 @@ export interface StudentHistoryResult {
   rank?: number | null;
   trade?: string | null;
   level?: string | null;
+  gradesPublished?: boolean;
   submittedAt: string;
 }
 
@@ -1374,7 +1379,8 @@ export const examApi = {
   getClassSummary: async () => {
     return studentApiRequest<{
       success: boolean;
-      summary: StudentClassSummary;
+      has_published_grades: boolean;
+      summary: StudentClassSummary | null;
       subjects: StudentClassSubjectSummary[];
       leaderboard: StudentClassLeaderboardEntry[];
     }>(`/results/class-summary`);
@@ -1468,6 +1474,20 @@ export const teacherExamApi = {
   },
   getExamResults: async (examId: string | number): Promise<TeacherExamResultsResponse> => {
     return teacherApiRequest<TeacherExamResultsResponse>(`/exams/${examId}/results`);
+  },
+  publishGrades: async (examId: string | number) => {
+    return teacherApiRequest<{
+      success: boolean;
+      message: string;
+      exam: {
+        id: string;
+        title: string;
+        grades_published: boolean;
+        grades_published_at?: string | null;
+      };
+    }>(`/exams/${examId}/results/publish`, {
+      method: "PATCH",
+    });
   },
 };
 

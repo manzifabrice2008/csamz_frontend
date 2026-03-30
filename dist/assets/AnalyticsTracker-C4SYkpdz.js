@@ -1,0 +1,1 @@
+import{u as c,r as n,a as r}from"./index-BKjd53T-.js";function s(){const t=c();return n.useEffect(()=>{const a=setTimeout(()=>{r.track(t.pathname).catch(e=>{console.debug("Analytics tracking failed:",e)})},500);return()=>clearTimeout(a)},[t.pathname]),null}export{s as default};

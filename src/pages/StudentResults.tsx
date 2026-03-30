@@ -12,9 +12,12 @@ export default function StudentResults() {
     const [summary, setSummary] = useState<StudentClassSummary | null>(null);
     const [subjects, setSubjects] = useState<StudentClassSubjectSummary[]>([]);
     const [leaderboard, setLeaderboard] = useState<StudentClassLeaderboardEntry[]>([]);
+    const [hasPublishedGrades, setHasPublishedGrades] = useState(false);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        let active = true;
+
         const fetchHistory = async () => {
             try {
                 const [historyResponse, classSummaryResponse] = await Promise.all([
@@ -22,11 +25,16 @@ export default function StudentResults() {
                     examApi.getClassSummary(),
                 ]);
 
+                if (!active) {
+                    return;
+                }
+
                 if (historyResponse.success) {
                     setResults(historyResponse.results);
                 }
 
                 if (classSummaryResponse.success) {
+                    setHasPublishedGrades(classSummaryResponse.has_published_grades);
                     setSummary(classSummaryResponse.summary);
                     setSubjects(classSummaryResponse.subjects);
                     setLeaderboard(classSummaryResponse.leaderboard);
@@ -39,6 +47,12 @@ export default function StudentResults() {
         };
 
         fetchHistory();
+        const interval = setInterval(fetchHistory, 15000);
+
+        return () => {
+            active = false;
+            clearInterval(interval);
+        };
     }, []);
 
     const getGradeColor = (grade: string) => {
@@ -60,6 +74,17 @@ export default function StudentResults() {
                             View your exam history, your class performance, and your grades in every subject.
                         </p>
                     </div>
+
+                    {!loading && !hasPublishedGrades ? (
+                        <Card className="border-dashed">
+                            <CardContent className="pt-6">
+                                <p className="font-medium">Class grades are not published yet.</p>
+                                <p className="mt-1 text-sm text-muted-foreground">
+                                    You can already see your own scores below. Your teacher needs to confirm and publish the grades before the class leaderboard and other students&apos; grades appear here.
+                                </p>
+                            </CardContent>
+                        </Card>
+                    ) : null}
 
                     {loading ? null : summary ? (
                         <div className="grid gap-4 md:grid-cols-3">

@@ -23,6 +23,8 @@ export default function StudentNotifications() {
 
     useEffect(() => {
         fetchNotifications();
+        const interval = setInterval(fetchNotifications, 15000);
+        return () => clearInterval(interval);
     }, []);
 
     const handleMarkRead = async (id: number) => {

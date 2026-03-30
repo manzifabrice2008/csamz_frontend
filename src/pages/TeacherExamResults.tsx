@@ -6,38 +6,43 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { teacherExamApi, TeacherExamResult } from "@/services/api";
-import { ArrowLeft, Loader2, Download, Medal, TrendingUp } from "lucide-react";
+import { ArrowLeft, Loader2, Download, Medal, TrendingUp, Send } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 
 export default function TeacherExamResults() {
     const { examId } = useParams<{ examId: string }>();
     const { toast } = useToast();
     const [loading, setLoading] = useState(true);
+    const [publishingGrades, setPublishingGrades] = useState(false);
     const [results, setResults] = useState<TeacherExamResult[]>([]);
     const [examTitle, setExamTitle] = useState("");
     const [stats, setStats] = useState<any>(null);
+    const [gradesPublished, setGradesPublished] = useState(false);
+    const [gradesPublishedAt, setGradesPublishedAt] = useState<string | null>(null);
+
+    const fetchResults = async () => {
+        if (!examId) return;
+        try {
+            const response = await teacherExamApi.getExamResults(examId);
+            if (response.success) {
+                setResults(response.results);
+                setExamTitle(response.exam_title);
+                setStats(response.stats);
+                setGradesPublished(response.grades_published);
+                setGradesPublishedAt(response.grades_published_at || null);
+            }
+        } catch (error: any) {
+            toast({
+                title: "Error",
+                description: error.message || "Failed to load results",
+                variant: "destructive",
+            });
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
-        const fetchResults = async () => {
-            if (!examId) return;
-            try {
-                const response = await teacherExamApi.getExamResults(examId);
-                if (response.success) {
-                    setResults(response.results);
-                    setExamTitle(response.exam_title);
-                    setStats(response.stats);
-                }
-            } catch (error: any) {
-                toast({
-                    title: "Error",
-                    description: error.message || "Failed to load results",
-                    variant: "destructive",
-                });
-            } finally {
-                setLoading(false);
-            }
-        };
-
         fetchResults();
     }, [examId, toast]);
 
@@ -100,20 +105,74 @@ export default function TeacherExamResults() {
         window.URL.revokeObjectURL(url);
     };
 
+    const handlePublishGrades = async () => {
+        if (!examId) return;
+
+        try {
+            setPublishingGrades(true);
+            const response = await teacherExamApi.publishGrades(examId);
+
+            setGradesPublished(response.exam.grades_published);
+            setGradesPublishedAt(response.exam.grades_published_at || null);
+            await fetchResults();
+
+            toast({
+                title: "Grades published",
+                description: response.message || "Students can now see the class grades and ranking.",
+            });
+        } catch (error: any) {
+            toast({
+                title: "Publish failed",
+                description: error?.message || "Failed to publish grades",
+                variant: "destructive",
+            });
+        } finally {
+            setPublishingGrades(false);
+        }
+    };
+
     return (
         <TeacherLayout>
             <div className="p-6 space-y-6">
-                <div className="flex items-center gap-4">
-                    <Button variant="ghost" size="icon" asChild>
-                        <Link to="/teacher/exams">
-                            <ArrowLeft className="w-5 h-5" />
-                        </Link>
-                    </Button>
-                    <div className="space-y-1">
-                        <h1 className="text-2xl font-bold tracking-tight">Exam Results</h1>
-                        <p className="text-muted-foreground">
-                            {loading ? "Loading..." : `Viewing results for "${examTitle}"`}
-                        </p>
+                <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                    <div className="flex items-center gap-4">
+                        <Button variant="ghost" size="icon" asChild>
+                            <Link to="/teacher/exams">
+                                <ArrowLeft className="w-5 h-5" />
+                            </Link>
+                        </Button>
+                        <div className="space-y-1">
+                            <h1 className="text-2xl font-bold tracking-tight">Exam Results</h1>
+                            <p className="text-muted-foreground">
+                                {loading ? "Loading..." : `Viewing results for "${examTitle}"`}
+                            </p>
+                        </div>
+                    </div>
+                    <div className="flex flex-col items-start gap-2 md:items-end">
+                        <Badge variant={gradesPublished ? "default" : "secondary"}>
+                            {gradesPublished ? "Grades Published" : "Grades Not Published"}
+                        </Badge>
+                        {gradesPublishedAt ? (
+                            <p className="text-xs text-muted-foreground">
+                                Published on {new Date(gradesPublishedAt).toLocaleString()}
+                            </p>
+                        ) : null}
+                        <Button
+                            onClick={handlePublishGrades}
+                            disabled={loading || publishingGrades || results.length === 0 || gradesPublished}
+                        >
+                            {publishingGrades ? (
+                                <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    Publishing grades...
+                                </>
+                            ) : (
+                                <>
+                                    <Send className="mr-2 h-4 w-4" />
+                                    {gradesPublished ? "Grades Published" : "Publish Grades"}
+                                </>
+                            )}
+                        </Button>
                     </div>
                 </div>
 

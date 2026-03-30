@@ -1,1 +1,0 @@
-import{b as n,r as a,j as e}from"./index-B5kmZFRt.js";function c({children:o}){const t=n();return a.useEffect(()=>{localStorage.getItem("authToken")||t("/admin/login")},[t]),localStorage.getItem("authToken")?e.jsx(e.Fragment,{children:o}):null}export{c as default};
