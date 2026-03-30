@@ -121,7 +121,7 @@ export default function StudentResults() {
                         </div>
                     ) : null}
 
-                    {!loading && subjects.length > 0 ? (
+                    {!loading && hasPublishedGrades && subjects.length > 0 ? (
                         <Card>
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2">
@@ -161,7 +161,7 @@ export default function StudentResults() {
                         </Card>
                     ) : null}
 
-                    {!loading && leaderboard.length > 0 ? (
+                    {!loading && hasPublishedGrades && leaderboard.length > 0 ? (
                         <Card>
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2">
