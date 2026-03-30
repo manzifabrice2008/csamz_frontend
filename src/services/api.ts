@@ -955,6 +955,7 @@ export interface TeacherUser {
   levels?: Array<'L3' | 'L4' | 'L5'>;
   role: 'teacher';
   status: 'pending' | 'approved' | 'rejected';
+  can_publish_marks?: boolean;
   created_at?: string;
 }
 
@@ -1159,7 +1160,7 @@ export const teacherAdminApi = {
     return apiRequest<{ success: boolean; teachers: TeacherUser[] }>('/teacher/auth/admin/list');
   },
 
-  updateStatus: async (id: number, status: 'pending' | 'approved' | 'rejected') => {
+  updateStatus: async (id: string | number, status: 'pending' | 'approved' | 'rejected') => {
     return apiRequest<{
       success: boolean;
       message: string;
@@ -1171,6 +1172,20 @@ export const teacherAdminApi = {
     }>(`/teacher/auth/admin/${id}/status`, {
       method: 'PATCH',
       body: JSON.stringify({ status }),
+    });
+  },
+
+  updatePublishPermission: async (id: string, canPublishMarks: boolean) => {
+    return apiRequest<{
+      success: boolean;
+      message: string;
+      teacher: {
+        id: string;
+        can_publish_marks: boolean;
+      };
+    }>(`/teacher/auth/admin/${id}/publish-permission`, {
+      method: 'PATCH',
+      body: JSON.stringify({ can_publish_marks: canPublishMarks }),
     });
   },
 };
@@ -1476,18 +1491,40 @@ export const teacherExamApi = {
     return teacherApiRequest<TeacherExamResultsResponse>(`/exams/${examId}/results`);
   },
   publishGrades: async (examId: string | number) => {
-    return teacherApiRequest<{
-      success: boolean;
-      message: string;
-      exam: {
-        id: string;
-        title: string;
-        grades_published: boolean;
-        grades_published_at?: string | null;
-      };
-    }>(`/exams/${examId}/results/publish`, {
-      method: "PATCH",
-    });
+    const request = () =>
+      teacherApiRequest<{
+        success: boolean;
+        message: string;
+        exam: {
+          id: string;
+          title: string;
+          grades_published: boolean;
+          grades_published_at?: string | null;
+        };
+      }>(`/exams/${examId}/results/publish`, {
+        method: "PATCH",
+      });
+
+    try {
+      return await request();
+    } catch (error: any) {
+      if (String(error?.message || "").toLowerCase().includes("route not found")) {
+        return teacherApiRequest<{
+          success: boolean;
+          message: string;
+          exam: {
+            id: string;
+            title: string;
+            grades_published: boolean;
+            grades_published_at?: string | null;
+          };
+        }>(`/teacher/exams/${examId}/results/publish`, {
+          method: "PATCH",
+        });
+      }
+
+      throw error;
+    }
   },
 };
 

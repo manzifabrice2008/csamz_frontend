@@ -138,6 +138,9 @@ const SchoolHeader = () => {
             <DropdownMenuItem onClick={() => (window.location.href = "/teacher/login")}>
               {t("teacherLogin") ?? "Teacher Login"}
             </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => (window.location.href = "/admin/login")}>
+              {"Admin Login"}
+            </DropdownMenuItem>
           </>
         )}
       </DropdownMenuContent>

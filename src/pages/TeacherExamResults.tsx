@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { teacherExamApi, TeacherExamResult } from "@/services/api";
+import { teacherAuthApi, teacherExamApi, TeacherExamResult } from "@/services/api";
 import { ArrowLeft, Loader2, Download, Medal, TrendingUp, Send } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 
@@ -19,6 +19,7 @@ export default function TeacherExamResults() {
     const [stats, setStats] = useState<any>(null);
     const [gradesPublished, setGradesPublished] = useState(false);
     const [gradesPublishedAt, setGradesPublishedAt] = useState<string | null>(null);
+    const [canPublishMarks, setCanPublishMarks] = useState(() => teacherAuthApi.getStoredTeacher()?.can_publish_marks !== false);
 
     const fetchResults = async () => {
         if (!examId) return;
@@ -45,6 +46,21 @@ export default function TeacherExamResults() {
     useEffect(() => {
         fetchResults();
     }, [examId, toast]);
+
+    useEffect(() => {
+        const syncTeacherPermission = async () => {
+            try {
+                const response = await teacherAuthApi.getCurrentTeacher();
+                if (response.success) {
+                    setCanPublishMarks(response.teacher.can_publish_marks !== false);
+                }
+            } catch {
+                setCanPublishMarks(teacherAuthApi.getStoredTeacher()?.can_publish_marks !== false);
+            }
+        };
+
+        syncTeacherPermission();
+    }, []);
 
     const rankedResults = useMemo(() => {
         return [...results].sort((a, b) => {
@@ -157,9 +173,14 @@ export default function TeacherExamResults() {
                                 Published on {new Date(gradesPublishedAt).toLocaleString()}
                             </p>
                         ) : null}
+                        {!canPublishMarks ? (
+                            <p className="text-xs text-amber-600 dark:text-amber-400">
+                                Your admin has disabled your permission to publish marks for the whole class.
+                            </p>
+                        ) : null}
                         <Button
                             onClick={handlePublishGrades}
-                            disabled={loading || publishingGrades || results.length === 0 || gradesPublished}
+                            disabled={loading || publishingGrades || results.length === 0 || gradesPublished || !canPublishMarks}
                         >
                             {publishingGrades ? (
                                 <>

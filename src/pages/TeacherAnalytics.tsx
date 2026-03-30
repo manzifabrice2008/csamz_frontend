@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { teacherAuthApi, teacherExamApi, ExamSummary, TeacherExamResult } from "@/services/api";
-import { Loader2, Download, TrendingUp, Medal, BarChart3, Users, ClipboardList, Filter } from "lucide-react";
+import { Loader2, Download, TrendingUp, Medal, BarChart3, Users, ClipboardList, Filter, Send } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 
 interface ExamStats {
@@ -56,6 +56,9 @@ export default function TeacherAnalytics() {
   const [selectedExamTitle, setSelectedExamTitle] = useState("");
   const [results, setResults] = useState<RankedExamResult[]>([]);
   const [stats, setStats] = useState<ExamStats | null>(null);
+  const [publishingGrades, setPublishingGrades] = useState(false);
+  const [gradesPublished, setGradesPublished] = useState(false);
+  const [gradesPublishedAt, setGradesPublishedAt] = useState<string | null>(null);
 
   const allowedTrades = useMemo(
     () =>
@@ -199,6 +202,8 @@ export default function TeacherAnalytics() {
             average_score: averageScore,
           });
           setSelectedExamTitle("Filtered Exam Results");
+          setGradesPublished(false);
+          setGradesPublishedAt(null);
           return;
         }
 
@@ -217,6 +222,8 @@ export default function TeacherAnalytics() {
           );
           setStats(response.stats || null);
           setSelectedExamTitle(response.exam_title);
+          setGradesPublished(response.grades_published);
+          setGradesPublishedAt(response.grades_published_at || null);
         }
       } catch (error: any) {
         toast({
@@ -244,6 +251,53 @@ export default function TeacherAnalytics() {
     () => filteredExams.find((exam) => exam.id === selectedExamId) || null,
     [filteredExams, selectedExamId]
   );
+
+  const canPublishMarks = teacherProfile?.can_publish_marks !== false;
+  const isSingleExamSelected = Boolean(selectedExam && selectedExamId !== "all");
+
+  const handlePublishGrades = async () => {
+    if (!selectedExam || !isSingleExamSelected) {
+      return;
+    }
+
+    try {
+      setPublishingGrades(true);
+      const response = await teacherExamApi.publishGrades(selectedExam.id);
+      setGradesPublished(response.exam.grades_published);
+      setGradesPublishedAt(response.exam.grades_published_at || null);
+      toast({
+        title: "Grades published",
+        description: response.message || "Students can now see the published marks and ranking.",
+      });
+
+      const refreshedTeacher = await teacherAuthApi.getCurrentTeacher().catch(() => null);
+      if (refreshedTeacher?.success) {
+        setTeacherProfile(refreshedTeacher.teacher);
+      }
+
+      const refreshedResults = await teacherExamApi.getExamResults(selectedExam.id);
+      if (refreshedResults.success) {
+        setResults(
+          refreshedResults.results.map((result) => ({
+            ...result,
+            examTitle: refreshedResults.exam_title,
+            examCode: selectedExam.exam_code,
+            examLevel: selectedExam.level,
+            examTrade: selectedExam.trade,
+          }))
+        );
+        setStats(refreshedResults.stats || null);
+      }
+    } catch (error: any) {
+      toast({
+        title: "Publish failed",
+        description: error?.message || "Failed to publish marks",
+        variant: "destructive",
+      });
+    } finally {
+      setPublishingGrades(false);
+    }
+  };
 
   const downloadCsv = () => {
     if (rankedResults.length === 0) {
@@ -480,11 +534,46 @@ export default function TeacherAnalytics() {
                   <p className="text-sm text-muted-foreground">
                     Students are listed from first to last by score so you can immediately see how they performed.
                   </p>
+                  {isSingleExamSelected ? (
+                    <div className="pt-1 text-xs text-muted-foreground">
+                      {gradesPublished
+                        ? `Marks published${gradesPublishedAt ? ` on ${new Date(gradesPublishedAt).toLocaleString()}` : ""}.`
+                        : canPublishMarks
+                          ? "After choosing one exam, you can publish these marks to students."
+                          : "Your admin has disabled your permission to publish marks to students."}
+                    </div>
+                  ) : (
+                    <div className="pt-1 text-xs text-muted-foreground">
+                      Choose one exam first to publish marks to students.
+                    </div>
+                  )}
                 </div>
-                <Button onClick={downloadCsv} disabled={rankedResults.length === 0} className="md:min-w-48">
-                  <Download className="mr-2 h-4 w-4" />
-                  Download CSV
-                </Button>
+                <div className="flex flex-col gap-3 md:flex-row">
+                  {isSingleExamSelected ? (
+                    <Button
+                      onClick={handlePublishGrades}
+                      disabled={rankedResults.length === 0 || publishingGrades || gradesPublished || !canPublishMarks}
+                      variant={gradesPublished ? "outline" : "default"}
+                      className="md:min-w-48"
+                    >
+                      {publishingGrades ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Publishing...
+                        </>
+                      ) : (
+                        <>
+                          <Send className="mr-2 h-4 w-4" />
+                          {gradesPublished ? "Marks Published" : "Publish Marks"}
+                        </>
+                      )}
+                    </Button>
+                  ) : null}
+                  <Button onClick={downloadCsv} disabled={rankedResults.length === 0} className="md:min-w-48">
+                    <Download className="mr-2 h-4 w-4" />
+                    Download CSV
+                  </Button>
+                </div>
               </CardContent>
             </Card>
 

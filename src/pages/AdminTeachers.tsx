@@ -20,7 +20,7 @@ export default function AdminTeachers() {
   const { toast } = useToast();
   const [teachers, setTeachers] = useState<TeacherUser[]>([]);
   const [loading, setLoading] = useState(true);
-  const [actionLoadingId, setActionLoadingId] = useState<number | null>(null);
+  const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
 
   const pendingCount = useMemo(() => teachers.filter((t) => t.status === "pending").length, [teachers]);
 
@@ -44,7 +44,7 @@ export default function AdminTeachers() {
     fetchTeachers();
   }, []);
 
-  const handleStatusChange = async (teacherId: number, status: TeacherStatus) => {
+  const handleStatusChange = async (teacherId: string, status: TeacherStatus) => {
     try {
       setActionLoadingId(teacherId);
       const response = await teacherAdminApi.updateStatus(teacherId, status);
@@ -59,6 +59,26 @@ export default function AdminTeachers() {
     } catch (error: any) {
       toast({
         title: "Update failed",
+        description: error?.message || "Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
+  const handlePublishPermissionChange = async (teacherId: string, canPublishMarks: boolean) => {
+    try {
+      setActionLoadingId(teacherId);
+      const response = await teacherAdminApi.updatePublishPermission(teacherId, canPublishMarks);
+      toast({
+        title: "Permission updated",
+        description: response.message,
+      });
+      await fetchTeachers();
+    } catch (error: any) {
+      toast({
+        title: "Permission update failed",
         description: error?.message || "Please try again.",
         variant: "destructive",
       });
@@ -115,6 +135,7 @@ export default function AdminTeachers() {
                         <TableHead>Trade</TableHead>
                         <TableHead>Class</TableHead>
                         <TableHead>Status</TableHead>
+                        <TableHead>Publish Marks</TableHead>
                         <TableHead className="text-right">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -128,6 +149,27 @@ export default function AdminTeachers() {
                           <TableCell>{teacher.levels?.join(", ") || teacher.level || "N/A"}</TableCell>
                           <TableCell>
                             <Badge className={statusStyles[teacher.status]}>{teacher.status}</Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <Badge variant={teacher.can_publish_marks === false ? "secondary" : "default"}>
+                                {teacher.can_publish_marks === false ? "Disabled" : "Enabled"}
+                              </Badge>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handlePublishPermissionChange(teacher.id, teacher.can_publish_marks === false)}
+                                disabled={actionLoadingId === teacher.id}
+                              >
+                                {actionLoadingId === teacher.id ? (
+                                  <Loader2 className="w-4 h-4 animate-spin" />
+                                ) : teacher.can_publish_marks === false ? (
+                                  "Enable"
+                                ) : (
+                                  "Disable"
+                                )}
+                              </Button>
+                            </div>
                           </TableCell>
                           <TableCell className="flex justify-end gap-2">
                             <Button

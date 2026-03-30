@@ -242,11 +242,25 @@ export default function StudentResults() {
                                                     <div className="text-xs text-muted-foreground">
                                                         {result.score} / {result.totalMarks} points
                                                     </div>
+                                                    <div className="mt-2 text-xs text-muted-foreground">
+                                                        {result.gradesPublished
+                                                            ? result.rank
+                                                                ? `Place ${result.rank} in your class`
+                                                                : "Published marks are available"
+                                                            : "Waiting for teacher to publish class ranking"}
+                                                    </div>
                                                 </div>
 
                                                 <div className="flex items-center gap-3">
                                                     <Badge className={`${getGradeColor(result.grade)} text-sm px-3 py-1`}>
                                                         Grade {result.grade}
+                                                    </Badge>
+                                                    <Badge variant="outline" className="text-xs">
+                                                        {result.gradesPublished
+                                                            ? result.rank
+                                                                ? `Class Place #${result.rank}`
+                                                                : "Published"
+                                                            : "Not Published"}
                                                     </Badge>
                                                     <Button asChild variant="ghost" size="icon">
                                                         <Link to={`/student/exams/${result.examId}/result`}>
